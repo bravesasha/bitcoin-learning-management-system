@@ -19,6 +19,7 @@ export type * from './professors2.js';
 export type * from './proofreading.js';
 export type * from './quiz.js';
 export type * from './resource.js';
+export type * from './translations.js';
 export type * from './tutorial.js';
 export type * from './blogs.js';
 export type * from './legals.js';

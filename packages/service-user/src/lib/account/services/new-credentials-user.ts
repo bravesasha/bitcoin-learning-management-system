@@ -1,5 +1,6 @@
 import { hash } from 'argon2';
 
+import type { UserPermission } from '@blms/constants';
 import { firstRow, rejectOnEmpty } from '@blms/database';
 import type { UserAccount } from '@blms/types';
 
@@ -13,6 +14,8 @@ interface Options {
   password: string;
   contributorId?: string;
   email: string | null;
+  isContributeApp?: boolean;
+  permissions?: UserPermission[];
 }
 
 export const createNewCredentialsUser = (dependencies: Dependencies) => {
@@ -30,6 +33,8 @@ export const createNewCredentialsUser = (dependencies: Dependencies) => {
           ...options,
           passwordHash,
           contributorId,
+          isContributeApp: options.isContributeApp || false,
+          permissions: options.permissions || [],
         }),
       )
       .then(firstRow)

@@ -67,6 +67,7 @@ export const credentialsAuthRouter = createTRPCRouter({
         password: input.password,
         contributorId: input.contributor_id,
         email: input.email ?? null,
+        // With isContributeApp: false (default), the role will be Student
       });
 
       if (user && input.email) {
@@ -98,7 +99,7 @@ export const credentialsAuthRouter = createTRPCRouter({
       if (ctx.req.session.uid) {
         ctx.log('----- User is already logged in');
         ctx.log('----- Clear user session');
-        ctx.req.session.destroy((err) => {
+        ctx.req.session.destroy((err: any) => {
           if (err)
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',

@@ -1,7 +1,5 @@
-import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
-
 import {
+  basicCourseSchema,
   courseAssignmentSchema,
   courseChapterResponseSchema,
   courseResponseSchema,
@@ -23,11 +21,13 @@ import {
   createGetCourseChapterQuizQuestionsCount,
   createGetCourseChapters,
   createGetCourses,
+  createGetCoursesBasic,
   createGetProfessorCourses,
   createGetPublicCourseReviews,
   createGetTeacherCourseReviews,
 } from '@blms/service-content';
 import type {
+  BasicCourse,
   CourseAssignment,
   CourseChapterResponse,
   CourseResponse,
@@ -38,6 +38,8 @@ import type {
   MinimalCourseAssignmentWithStudents,
   QuizQuestionsCount,
 } from '@blms/types';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 import {
   professorProcedure,
@@ -222,6 +224,19 @@ const calculateCourseChapterSeatsProcedure = publicProcedure
     return createCalculateCourseChapterSeats(ctx.dependencies)();
   });
 
+const getCoursesBasicProcedure = publicProcedure
+  .input(
+    z
+      .object({
+        language: z.string().optional(),
+      })
+      .optional(),
+  )
+  .output<Parser<BasicCourse[]>>(basicCourseSchema.array())
+  .query(({ ctx, input }) => {
+    return createGetCoursesBasic(ctx.dependencies)(input?.language);
+  });
+
 export const coursesRouter = createTRPCRouter({
   getCourses: getCoursesProcedure,
   getProfessorCourses: getProfessorCoursesProcedure,
@@ -237,4 +252,5 @@ export const coursesRouter = createTRPCRouter({
   calculateCourseChapterSeats: calculateCourseChapterSeatsProcedure,
   getPublicCourseReviews: getPublicCourseReviewsProcedure,
   getTeacherCourseReviews: getTeacherCourseReviewsProcedure,
+  getCoursesBasic: getCoursesBasicProcedure,
 });

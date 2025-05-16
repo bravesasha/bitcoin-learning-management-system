@@ -16,6 +16,7 @@ export * from './professors2.js';
 export * from './proofreading.js';
 export * from './quiz.js';
 export * from './resource.js';
+export * from './translations.js';
 export * from './tutorial.js';
 export * from './blogs.js';
 export * from './legals.js';

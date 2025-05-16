@@ -1,3 +1,4 @@
+import { UserPermission, UserRole } from '@blms/constants';
 import { sql } from '@blms/database';
 import type { UserAccount } from '@blms/types';
 
@@ -6,6 +7,8 @@ interface NewCredentialsUserOptions {
   passwordHash: string;
   contributorId: string;
   email: string | null;
+  isContributeApp?: boolean;
+  permissions?: string[];
 }
 
 export const newCredentialsUserQuery = ({
@@ -13,7 +16,22 @@ export const newCredentialsUserQuery = ({
   passwordHash,
   contributorId,
   email,
+  isContributeApp = false,
+  permissions = [],
 }: NewCredentialsUserOptions) => {
+  const role = isContributeApp ? UserRole.Contributor : UserRole.Student;
+
+  // If this is a contributor user and no permissions are specified,
+  // set default permissions to include reviewer capabilities
+  let userPermissions = permissions;
+  if (
+    isContributeApp &&
+    role === UserRole.Contributor &&
+    permissions.length === 0
+  ) {
+    userPermissions = [UserPermission.ContributeReviewer];
+  }
+
   return sql<UserAccount[]>`
     WITH inserted_user AS (
       INSERT INTO users.accounts (
@@ -22,14 +40,18 @@ export const newCredentialsUserQuery = ({
         certificate_name,
         password_hash,
         email,
-        contributor_id
+        contributor_id,
+        role,
+        permissions
       ) VALUES (
         ${username.toLowerCase()},
         ${username},
         ${username},
         ${passwordHash},
         ${email || null},
-        ${contributorId}
+        ${contributorId},
+        ${role},
+        ${userPermissions}
       )
       RETURNING
         uid,
