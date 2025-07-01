@@ -9,6 +9,7 @@ import {
   contentCourses,
   contentCoursesAssignment,
   contentCoursesLocalized,
+  usersReviewerLanguages,
 } from '@blms/database';
 
 import { formattedProfessorSchema } from './professor.js';
@@ -31,6 +32,10 @@ export const courseChapterLocalizedSchema = createSelectSchema(
 
 export const courseAssignmentSchema = createSelectSchema(
   contentCoursesAssignment,
+);
+
+export const reviewerLanguagesSchema = createSelectSchema(
+  usersReviewerLanguages,
 );
 
 export const joinedCoursePartLocalizedSchema = coursePartLocalizedSchema
@@ -336,19 +341,41 @@ export const minimalCourseAssignmentWithStudentsSchema = courseAssignmentSchema
       ),
     }),
   );
-export const basicCourseSchema = z.object({
-  id: z.string(),
-  index: z.string(),
-  topic: z.string(),
-  originalLanguage: z.string(),
-  isArchived: z.boolean(),
-  publishedAt: z.date().nullable(),
-  lastCommit: z.string(),
-  name: z.string(),
-  goal: z.string(),
-});
 
-export const courseTranslationResponseSchema = z.object({
-  courseId: z.string(),
-  language: z.string(),
-});
+export const basicCourseSchema = courseSchema
+  .pick({
+    id: true,
+    index: true,
+    topic: true,
+    originalLanguage: true,
+    isArchived: true,
+    publishedAt: true,
+    lastCommit: true,
+  })
+  .merge(
+    courseLocalizedSchema.pick({
+      name: true,
+      goal: true,
+    }),
+  );
+
+export const courseInfoSchema = courseSchema
+  .pick({
+    id: true,
+    index: true,
+  })
+  .merge(
+    courseLocalizedSchema.pick({
+      name: true,
+    }),
+  )
+  .merge(
+    z.object({
+      languages: z.array(
+        z.object({
+          code: z.string(),
+          name: z.string(),
+        }),
+      ),
+    }),
+  );
