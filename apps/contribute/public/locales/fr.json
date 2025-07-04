@@ -1338,7 +1338,10 @@
     "email": "Email",
     "save": "Sauvegarder",
     "calendar": "Calendrier",
-    "mode": "Mode"
+    "mode": "Mode",
+    "completed": "Terminé",
+    "inProgress": "En cours",
+    "notStarted": "Non commencé"
   },
   "conferences": {
     "addConferences": "N'hésitez pas à ajouter toute conférence manquante via ce dépôt <0>Github</0>.",
@@ -1502,7 +1505,7 @@
     "bitcoinTranslationCommunity": "Communauté de relecture Bitcoin",
     "bridgingLanguageGaps": "Combler les lacunes linguistiques, une vidéo à la fois. Rejoignez nos contributeurs dans la relecture, rendant l'éducation Bitcoin accessible dans le monde entier. Chaque relecture aide plus de personnes à comprendre et à s'engager avec l'écosystème.",
     "backToLanguages": "« Retour aux langues",
-    "backToSection": "Retour à la section à relire",
+    "backToSection": "Retour aux cours",
     "selectCourseToTranslate": "Sélectionnez un cours à relire",
     "youCanSelectOnlyOneCourse": "Vous ne pouvez sélectionner qu'un seul cours à la fois pour commencer à relire son contenu",
     "noCoursesAvailableForTranslation": "Aucun cours disponible pour la relecture dans cette langue pour le moment",
@@ -1568,6 +1571,12 @@
       "close": "Fermer",
       "requestSentSuccess": "✓ Demande envoyée",
       "onceRequestApproved": "Une fois votre demande approuvée, vous pourrez commencer à relire ce cours. Vous serez notifié dès qu'elle sera acceptée."
-    }
+    },
+    "joinOurProofreaders": "Rejoignez notre équipe de relecture pour rendre l'éducation Bitcoin accessible dans le monde entier. Vous pouvez aider plus de personnes à s'engager avec l'écosystème et à trouver leur chemin vers la liberté !",
+    "courseProofreadingProgress": "Progression de la relecture du cours",
+    "ofChaptersCompleted": "sur {{count}} chapitres terminés",
+    "review": "Réviser",
+    "resume": "Reprendre",
+    "proofread": "Relire"
   }
 }

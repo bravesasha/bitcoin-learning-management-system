@@ -20,7 +20,6 @@ function ContentSectionPage() {
   const { lang } = Route.useParams();
   const [courseTranslationProgress, setCourseTranslationProgress] =
     useState<number>(0);
-  const [, setIsLoadingProgress] = useState(false);
 
   // Get the target language from localStorage (selected on previous page)
   const [targetLanguage, setTargetLanguage] = useState<string>('en');
@@ -36,7 +35,6 @@ function ContentSectionPage() {
       if (!targetLanguage) return;
 
       try {
-        setIsLoadingProgress(true);
         const progressData =
           await trpcClient.content.getTranslationProgress.query({
             language: targetLanguage,
@@ -47,8 +45,6 @@ function ContentSectionPage() {
         }
       } catch (error) {
         console.error('Failed to fetch translation progress:', error);
-      } finally {
-        setIsLoadingProgress(false);
       }
     };
 

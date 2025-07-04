@@ -1655,7 +1655,10 @@
     "view": "View",
     "viewMore": "View more",
     "wallets": "Wallets",
-    "yes": "Yes"
+    "yes": "Yes",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started"
   },
   "youtubeChannels": {
     "pageTitle": "Youtube Channels",
@@ -1665,9 +1668,9 @@
   "translate": {
     "makingBitcoinEducationGlobal": "Making Bitcoin Education Global",
     "bitcoinTranslationCommunity": "Bitcoin Proofreading Community",
-    "bridgingLanguageGaps": "Bridging language gaps, one video at a time. Join our contributors in proofreading, making Bitcoin education accessible worldwide. Every proofreading helps more people understand and engage with the ecosystem.",
+    "bridgingLanguageGaps": "Bridging language gaps, one video at a time.",
     "backToLanguages": "« Back to Languages",
-    "backToSection": "Back to section to proofread",
+    "backToSection": "Back to courses",
     "selectCourseToTranslate": "Select a course to proofread",
     "youCanSelectOnlyOneCourse": "You can select only one course at a time to begin proofreading its content",
     "noCoursesAvailableForTranslation": "No courses available for proofreading in this language yet",
@@ -1733,6 +1736,12 @@
       "close": "Close",
       "requestSentSuccess": "✓ Request Sent",
       "onceRequestApproved": "Once your request is approved, you'll be able to start proofreading this course. You'll be notified as soon as it's accepted."
-    }
+    },
+    "joinOurProofreaders": "Join our proofreading team to make Bitcoin education accessible worldwide. You can help more people engage with the ecosystem and find their path to freedom!",
+    "courseProofreadingProgress": "Course proofreading progress",
+    "ofChaptersCompleted": "of {{count}} chapters completed",
+    "review": "Review",
+    "resume": "Resume",
+    "proofread": "Proofread"
   }
 }

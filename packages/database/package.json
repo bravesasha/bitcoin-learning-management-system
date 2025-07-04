@@ -24,7 +24,9 @@
     "drizzle:studio": "drizzle-kit studio",
     "drizzle:up": "drizzle-kit up --config=drizzle.config.ts",
     "db:migrate": "tsx ./scripts/migrate.ts",
-    "db:migrate:local": "dotenv -e ../../.env -- tsx ./scripts/migrate.ts"
+    "db:migrate:local": "dotenv -e ../../.env -- tsx ./scripts/migrate.ts",
+    "db:populate-slides": "tsx ./scripts/populate-slides.ts",
+    "db:populate-slides:local": "dotenv -e ../../.env -- tsx ./scripts/populate-slides.ts"
   },
   "dependencies": {
     "@blms/constants": "workspace:*",
