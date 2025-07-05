@@ -1742,6 +1742,36 @@
     "ofChaptersCompleted": "of {{count}} chapters completed",
     "review": "Review",
     "resume": "Resume",
-    "proofread": "Proofread"
+    "proofread": "Proofread",
+    "videoGeneration": {
+      "completed": "Great job! Thank you for proofreading this course!",
+      "title": "Video generation",
+      "progress": "progress",
+      "completedMessage": "No need to wait! Feel free to review the next course now.",
+      "backToCourse": "Back to course",
+      "nextChapter": "Next chapter"
+    },
+    "progress": "Progress",
+    "slides": "Slides",
+    "chapterTranslation": "Chapter translation",
+    "coursePresentation": "Course presentation",
+    "reviewAndEditSlides": "Review and edit each slide, making the necessary adjustments. Once you're finished, select 'Validate Presentation' to save your changes.",
+    "translateTo": "Translate to",
+    "enVersion": "EN version",
+    "saveChanges": "Save changes",
+    "validatePresentationPPT": "Validate presentation PPT",
+    "reviewTranscriptionGenerateAudio": "Review transcription & generate audio",
+    "reviewTranscriptionInstructions": "Translate and type the transcription of the lecture in your language. Then, select Generate Audio to create an automatic audio version of your transcription. Once generated, listen to the audio to ensure accuracy and validate it using Validate Audio. If needed, you can regenerate the audio to make adjustments. You can do this up to 3 times.",
+    "language": "Language",
+    "limitTries": "Limit 2/3 tries",
+    "generateAudio": "Generate audio",
+    "editTranscript": "Edit transcript",
+    "enterTranslation": "Enter your translation here...",
+    "validateTranscription": "Validate transcription",
+    "validateAudio": "Validate audio",
+    "reviewInstructions": "Review the transcription, make any necessary corrections, and then generate the audio.",
+    "createVideo": "Create video",
+    "nextSlide": "Next slide",
+    "completeAllValidations": "Please complete all validations before proceeding"
   }
 }

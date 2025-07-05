@@ -104,6 +104,21 @@ function ChapterTranslationPage() {
     return currentChapterIndex === allChapters.length - 1;
   }, [courseData, chapterData, chapterId]);
 
+  // Check if this is the last slide of the entire course (last slide of the last chapter)
+  const isLastSlideOfCourse = isLastSlide && isLastChapter;
+
+  // Calculate the overall chapter number (across the whole course)
+  const overallChapterNumber = React.useMemo(() => {
+    if (!courseData) return 0;
+    const chaptersInCourse = courseData.parts.flatMap(
+      (part: any) => part.chapters,
+    );
+    const index = chaptersInCourse.findIndex(
+      (ch: any) => ch.chapterId === chapterId,
+    );
+    return index >= 0 ? index + 1 : 0; // 1-based index, 0 if not found
+  }, [courseData, chapterId]);
+
   // Reset validation states when slide index changes
   useEffect(() => {
     setValidationStates({
@@ -281,7 +296,10 @@ function ChapterTranslationPage() {
   };
 
   const handleNextSlide = () => {
-    if (chapterData && currentSlideIndex < chapterData.slides.length - 1) {
+    if (!chapterData || !courseData) return;
+
+    // If there are more slides in the current chapter, just go to the next one
+    if (currentSlideIndex < chapterData.slides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
       // Reset validation states for the new slide
       setValidationStates({
@@ -289,7 +307,39 @@ function ChapterTranslationPage() {
         transcriptionValidated: false,
         audioValidated: false,
       });
+      return;
     }
+
+    // We are on the last slide of the current chapter
+    // Determine if there is a next chapter in the course
+    const allChapters = courseData.parts.flatMap((part: any) =>
+      part.chapters.map((chapter: any) => ({
+        ...chapter,
+        partIndex: part.partIndex,
+        partId: part.partId,
+      })),
+    );
+
+    const currentChapterIndex = allChapters.findIndex(
+      (chapter: any) => chapter.chapterId === chapterId,
+    );
+
+    if (
+      currentChapterIndex >= 0 &&
+      currentChapterIndex < allChapters.length - 1
+    ) {
+      // Navigate to the first slide of the next chapter
+      const nextChapter = allChapters[currentChapterIndex + 1];
+      navigate({
+        to: '/$lang/content/translate/$courseId/$chapterId',
+        params: {
+          lang: i18n.language,
+          courseId,
+          chapterId: nextChapter.chapterId,
+        },
+      });
+    }
+    // If there is no next chapter, do nothing here. The UI will offer to create the video.
   };
 
   const handleCreateVideo = async () => {
@@ -548,7 +598,7 @@ function ChapterTranslationPage() {
                 </span>
                 <span className="text-sm font-normal text-[#808080]">
                   {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
-                  {chapterData.context.chapterIndex}/{totalChapters}{' '}
+                  {overallChapterNumber}/{totalChapters}{' '}
                   {t('translate.chapters', { defaultValue: 'Chapters' })}
                 </span>
               </div>
@@ -557,10 +607,8 @@ function ChapterTranslationPage() {
               <div className="flex items-center relative h-4">
                 {totalChapters > 0 &&
                   Array.from({ length: totalChapters }, (_, chapterIndex) => {
-                    const isCompleted =
-                      chapterIndex + 1 < chapterData.context.chapterIndex;
-                    const isCurrent =
-                      chapterIndex + 1 === chapterData.context.chapterIndex;
+                    const isCompleted = chapterIndex + 1 < overallChapterNumber;
+                    const isCurrent = chapterIndex + 1 === overallChapterNumber;
                     const isFirst = chapterIndex === 0;
                     const isLast = chapterIndex === totalChapters - 1;
 
@@ -964,7 +1012,7 @@ function ChapterTranslationPage() {
       {/* Action Button - Next Slide or Create Video */}
       {chapterData && (
         <div className="flex justify-end">
-          {isLastSlide ? (
+          {isLastSlideOfCourse ? (
             <button
               type="button"
               onClick={handleCreateVideo}
