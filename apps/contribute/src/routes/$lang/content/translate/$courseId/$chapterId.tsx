@@ -5,6 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { TranslationStatus } from '@blms/constants';
 import Back15Icon from '#src/assets/icons/back_15.svg';
 import BookClosedIcon from '#src/assets/icons/book_closed.svg';
+import BreadcrumbArrowIcon from '#src/assets/icons/breadcrumb_navigation_arrow_orange.svg';
+import CheckCircleGrayIcon from '#src/assets/icons/check_circle_gray.svg';
+import CheckCircleOrangeIcon from '#src/assets/icons/check_circle_orange.svg';
+import DroplistArrowIcon from '#src/assets/icons/droplist_arrow_balck.svg';
 import Forward15Icon from '#src/assets/icons/forward_15.svg';
 import OrangePill from '#src/assets/icons/orange_pill_color.svg';
 import PlayIcon from '#src/assets/icons/play.svg';
@@ -118,6 +122,16 @@ function ChapterTranslationPage() {
     );
     return index >= 0 ? index + 1 : 0; // 1-based index, 0 if not found
   }, [courseData, chapterId]);
+
+  // Calculate the last chapter index of every part to create visual grouping in progress bar
+  const partEndIndexes = React.useMemo(() => {
+    if (!courseData) return [] as number[];
+    let cumulative = 0;
+    return courseData.parts.map((part: any) => {
+      cumulative += part.chapters?.length || 0;
+      return cumulative - 1; // zero-based index of last chapter in this part
+    });
+  }, [courseData]);
 
   // Reset validation states when slide index changes
   useEffect(() => {
@@ -509,7 +523,7 @@ function ChapterTranslationPage() {
     >
       {/* Main Content Header */}
       <div className="text-center mb-10 mt-10">
-        <p className="text-orange-500 text-sm font-medium mb-2">
+        <p className="text-orange-500 text-base font-medium mb-2">
           {t('translate.bridgingLanguageGaps', {
             defaultValue: 'Bridging language gaps, one video at a time',
           })}
@@ -530,22 +544,19 @@ function ChapterTranslationPage() {
       {/* Navigation and Course Header */}
       <div className="flex flex-col gap-10 mb-10">
         {/* Back Navigation */}
-        <div className="flex items-center gap-1 text-sm">
-          <span className="text-orange-500">‹</span>
-          <Link
-            to="/$lang/content/translate"
-            className="text-orange-500 hover:text-orange-600 font-medium"
-          >
-            {t('translate.backToSection', { defaultValue: 'Back to courses' })}
-          </Link>
-          <span className="text-orange-500">‹</span>
+        <div className="flex items-center gap-1 text-base">
+          <img src={BreadcrumbArrowIcon} alt="" className="w-[8px] h-[12px]" />
           <Link
             to="/$lang/content/translate/$courseId"
             params={{ courseId }}
             className="text-orange-500 hover:text-orange-600 font-medium"
           >
-            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
+            {chapterData.context.courseIndex?.toUpperCase()}
           </Link>
+          <img src={BreadcrumbArrowIcon} alt="" className="w-[8px] h-[12px]" />
+          <span className="text-orange-500 font-medium">
+            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
+          </span>
         </div>
 
         {/* Course Header */}
@@ -591,12 +602,18 @@ function ChapterTranslationPage() {
             <div className="flex-1 flex flex-col gap-3">
               {/* Progress text */}
               <div className="flex items-center gap-2">
-                <span className="w-[12.67px] h-[12.67px] bg-[#B2B2B2] rounded-full flex items-center justify-center">
-                  <span className="text-white text-[8px] leading-none font-bold">
-                    ✓
-                  </span>
-                </span>
-                <span className="text-sm font-normal text-[#808080]">
+                <img
+                  src={
+                    isLastChapter ? CheckCircleOrangeIcon : CheckCircleGrayIcon
+                  }
+                  alt="progress icon"
+                  className="w-[14px] h-[14px]"
+                />
+                <span
+                  className={`text-sm font-normal ${
+                    isLastChapter ? 'text-[#853000]' : 'text-[#808080]'
+                  }`}
+                >
                   {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
                   {overallChapterNumber}/{totalChapters}{' '}
                   {t('translate.chapters', { defaultValue: 'Chapters' })}
@@ -604,7 +621,8 @@ function ChapterTranslationPage() {
               </div>
 
               {/* Segmented progress bar */}
-              <div className="flex items-center relative h-4">
+              {/* Added gap between segments for improved readability */}
+              <div className="flex items-center relative h-4 gap-[3px]">
                 {totalChapters > 0 &&
                   Array.from({ length: totalChapters }, (_, chapterIndex) => {
                     const isCompleted = chapterIndex + 1 < overallChapterNumber;
@@ -614,7 +632,11 @@ function ChapterTranslationPage() {
 
                     return (
                       <div
-                        className="border-white relative flex grow overflow-visible border-l-[1.5px] first:border-l-0"
+                        className={`relative flex grow overflow-visible ${
+                          partEndIndexes.includes(chapterIndex) && !isLast
+                            ? 'mr-[15px]'
+                            : ''
+                        }`}
                         key={`progress-chapter-${chapterIndex + 1}`}
                       >
                         <div
@@ -647,12 +669,16 @@ function ChapterTranslationPage() {
           <div className="flex flex-col gap-2">
             {/* Progress text with bullet */}
             <div className="flex items-center gap-2">
-              <span className="w-[12.67px] h-[12.67px] bg-[#B2B2B2] rounded-full flex items-center justify-center">
-                <span className="text-white text-[8px] leading-none font-bold">
-                  ✓
-                </span>
-              </span>
-              <span className="text-sm font-normal text-[#808080]">
+              <img
+                src={isLastSlide ? CheckCircleOrangeIcon : CheckCircleGrayIcon}
+                alt="progress icon"
+                className="w-[14px] h-[14px]"
+              />
+              <span
+                className={`text-sm font-normal ${
+                  isLastSlide ? 'text-[#853000]' : 'text-[#808080]'
+                }`}
+              >
                 {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
                 {currentSlideIndex + 1}/{chapterData.slides.length}{' '}
                 {t('translate.slides', { defaultValue: 'Slides' })}
@@ -822,9 +848,11 @@ function ChapterTranslationPage() {
                     <option>English</option>
                   </select>
                   {/* Black arrow icon */}
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black text-xs">
-                    ▼
-                  </span>
+                  <img
+                    src={DroplistArrowIcon}
+                    alt=""
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-[11px] h-[7px]"
+                  />
                 </div>
               </div>
 

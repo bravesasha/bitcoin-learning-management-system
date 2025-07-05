@@ -14,6 +14,7 @@ import type {
   PartWithChapters,
 } from '@blms/types';
 import { ChaptersTable } from '@blms/ui';
+import BreadcrumbArrowIcon from '#src/assets/icons/breadcrumb_navigation_arrow_orange.svg';
 import { PageLayout } from '#src/components/page-layout.tsx';
 import { BackLink } from '#src/molecules/backlink.tsx';
 import { trpcClient } from '#src/utils/trpc.ts';
@@ -244,8 +245,12 @@ function ProofreadCoursePage() {
           {/* Navigation and Course Header */}
           <div className="flex flex-col gap-6 mb-8">
             {/* Back Navigation */}
-            <div className="flex items-center gap-1 text-sm">
-              <span className="text-orange-500">‹</span>
+            <div className="flex items-center gap-1 text-base">
+              <img
+                src={BreadcrumbArrowIcon}
+                alt=""
+                className="w-[8px] h-[12px]"
+              />
               <Link
                 to="/$lang/content/translate"
                 className="text-orange-500 hover:text-orange-600 font-medium"
@@ -254,7 +259,11 @@ function ProofreadCoursePage() {
                   defaultValue: 'Back to courses',
                 })}
               </Link>
-              <span className="text-orange-500">‹</span>
+              <img
+                src={BreadcrumbArrowIcon}
+                alt=""
+                className="w-[8px] h-[12px]"
+              />
               <span className="text-orange-500 font-medium">
                 {course?.index?.toUpperCase() || courseId.toUpperCase()}
               </span>
