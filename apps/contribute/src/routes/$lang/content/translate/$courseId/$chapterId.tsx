@@ -3,7 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { TranslationStatus } from '@blms/constants';
+import Back15Icon from '#src/assets/icons/back_15.svg';
+import BookClosedIcon from '#src/assets/icons/book_closed.svg';
+import Forward15Icon from '#src/assets/icons/forward_15.svg';
 import OrangePill from '#src/assets/icons/orange_pill_color.svg';
+import PlayIcon from '#src/assets/icons/play.svg';
 import { PageLayout } from '#src/components/page-layout.tsx';
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
 import { BackLink } from '#src/molecules/backlink.tsx';
@@ -454,7 +458,7 @@ function ChapterTranslationPage() {
       paddingXClasses="px-4 md:px-8"
     >
       {/* Main Content Header */}
-      <div className="text-center mb-8 mt-8">
+      <div className="text-center mb-10 mt-10">
         <p className="text-orange-500 text-sm font-medium mb-2">
           {t('translate.bridgingLanguageGaps', {
             defaultValue: 'Bridging language gaps, one video at a time',
@@ -474,7 +478,7 @@ function ChapterTranslationPage() {
       </div>
 
       {/* Navigation and Course Header */}
-      <div className="flex flex-col gap-6 mb-8">
+      <div className="flex flex-col gap-10 mb-10">
         {/* Back Navigation */}
         <div className="flex items-center gap-1 text-sm">
           <span className="text-orange-500">‹</span>
@@ -490,33 +494,33 @@ function ChapterTranslationPage() {
             params={{ courseId }}
             className="text-orange-500 hover:text-orange-600 font-medium"
           >
-            {chapterData.context.courseIndex?.toUpperCase()}
+            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
           </Link>
         </div>
 
         {/* Course Header */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4">
           <div
             className="text-gray-700 px-3 py-1 rounded text-sm font-medium"
             style={{ backgroundColor: '#E5E5E5' }}
           >
             {chapterData.context.courseIndex?.toUpperCase()}
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-semibold text-gray-900">
             {chapterData.context.courseName}
           </h2>
-          <div className="text-orange-500 font-medium">
-            {chapterData.context.partIndex}.{chapterData.context.chapterIndex}
-          </div>
+          <span className="ml-auto text-sm font-medium text-gray-900 text-right">
+            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
+          </span>
         </div>
 
         {/* Progress Cards - Full Width */}
-        <div className="flex flex-col gap-6 mb-8">
+        <div className="flex flex-col gap-6">
           {/* Course Progress by Chapters */}
           <div
             style={{
               backgroundColor: '#FDF1E8',
-              border: '1px solid #F97316',
+              border: '1px solid #FF5C00',
               borderRadius: '8px',
               padding: '16px 20px',
               display: 'flex',
@@ -524,31 +528,25 @@ function ChapterTranslationPage() {
               gap: '20px',
             }}
           >
-            {/* Large dotted icon */}
+            {/* Book icon */}
             <div className="flex-shrink-0">
-              <div
-                className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center"
-                style={{
-                  backgroundImage: `
-                    radial-gradient(circle, white 1px, transparent 1px),
-                    radial-gradient(circle, white 1px, transparent 1px)
-                  `,
-                  backgroundSize: '6px 6px',
-                  backgroundPosition: '0 0, 3px 3px',
-                }}
-              >
-                {/* Optional: Add inner content if needed */}
-              </div>
+              <img
+                src={BookClosedIcon}
+                alt="Course icon"
+                className="w-[60px] h-[60px]"
+              />
             </div>
 
             {/* Progress text and bar container */}
             <div className="flex-1 flex flex-col gap-3">
               {/* Progress text */}
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
-                  <span className="w-2 h-2 bg-white rounded-full" />
+                <span className="w-[12.67px] h-[12.67px] bg-[#B2B2B2] rounded-full flex items-center justify-center">
+                  <span className="text-white text-[8px] leading-none font-bold">
+                    ✓
+                  </span>
                 </span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-normal text-[#808080]">
                   {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
                   {chapterData.context.chapterIndex}/{totalChapters}{' '}
                   {t('translate.chapters', { defaultValue: 'Chapters' })}
@@ -598,13 +596,15 @@ function ChapterTranslationPage() {
           </div>
 
           {/* Slide Progress within Chapter */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-2">
             {/* Progress text with bullet */}
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
-                <span className="w-2 h-2 bg-white rounded-full" />
+              <span className="w-[12.67px] h-[12.67px] bg-[#B2B2B2] rounded-full flex items-center justify-center">
+                <span className="text-white text-[8px] leading-none font-bold">
+                  ✓
+                </span>
               </span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-normal text-[#808080]">
                 {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
                 {currentSlideIndex + 1}/{chapterData.slides.length}{' '}
                 {t('translate.slides', { defaultValue: 'Slides' })}
@@ -612,7 +612,7 @@ function ChapterTranslationPage() {
             </div>
 
             {/* Segmented slide progress bar */}
-            <div className="flex-1 flex items-center gap-1 h-2">
+            <div className="flex items-center gap-1 h-[6px]">
               {chapterData.slides.map((slide, slideIndex) => {
                 const isCompleted = slideIndex < currentSlideIndex;
                 const isCurrent = slideIndex === currentSlideIndex;
@@ -622,9 +622,13 @@ function ChapterTranslationPage() {
                 return (
                   <div
                     key={`slide-progress-${slide.slideId}`}
-                    className={`h-2 flex-1 ${
-                      isCompleted || isCurrent ? 'bg-orange-500' : 'bg-gray-300'
-                    } ${isFirst ? 'rounded-l-full' : ''} ${isLast ? 'rounded-r-full' : ''}`}
+                    className={`h-[6px] flex-1 rounded-full ${
+                      isCompleted
+                        ? 'bg-orange-400'
+                        : isCurrent
+                          ? 'bg-orange-500'
+                          : 'bg-[#E5E5E5]'
+                    }`}
                   />
                 );
               })}
@@ -634,13 +638,13 @@ function ChapterTranslationPage() {
       </div>
 
       {/* Course Presentation Section */}
-      <div className="mb-8">
-        <h3 className="text-xl font-bold mb-4 text-gray-900">
+      <div className="mb-10">
+        <h3 className="text-xl font-bold mb-5 text-gray-900">
           {t('translate.coursePresentation', {
             defaultValue: 'Course presentation',
           })}
         </h3>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-10">
           {t('translate.reviewAndEditSlides', {
             defaultValue:
               "Review and edit each slide, making the necessary adjustments. Once you're finished, select 'Validate Presentation' to save your changes.",
@@ -654,10 +658,11 @@ function ChapterTranslationPage() {
             border: '1px solid #D1D5DB',
             borderRadius: '8px',
             padding: '20px',
+            boxShadow: '0px 1px 1px 0px #00000040',
           }}
         >
           {/* Language Toggle */}
-          <div className="mb-6">
+          <div className="mb-5">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-900">
                 {t('translate.originalLanguage', {
@@ -672,7 +677,7 @@ function ChapterTranslationPage() {
               <span className="text-orange-500">Italiano</span>
               <button
                 type="button"
-                className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded text-sm"
+                className="ml-auto border border-[#F97316] bg-gray-100 text-[#F97316] px-4 py-1 rounded-[8px] text-sm hover:bg-orange-50 transition-colors"
               >
                 {t('translate.enVersion', { defaultValue: 'EN version' })}
               </button>
@@ -709,7 +714,7 @@ function ChapterTranslationPage() {
               className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
             >
               <div
-                className={`w-6 h-6 border-2 flex items-center justify-center ${
+                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
                   validationStates.presentationValidated
                     ? 'bg-orange-500 border-orange-500'
                     : 'bg-transparent border-gray-400'
@@ -733,13 +738,13 @@ function ChapterTranslationPage() {
       </div>
 
       {/* Review Transcription & Generate Audio Section */}
-      <div className="mb-8">
-        <h3 className="text-xl font-bold mb-4 text-gray-900">
+      <div className="mt-10 mb-10">
+        <h3 className="text-xl font-bold mb-5 text-gray-900">
           {t('translate.reviewTranscriptionGenerateAudio', {
             defaultValue: 'Review transcription & generate audio',
           })}
         </h3>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-10">
           {t('translate.reviewTranscriptionInstructions', {
             defaultValue:
               "First, check the transcription of the lecture in your language and add your changes. Then, click on 'Generate Audio' to create an audio version of it. After the audio is generated, listen to it and ensure its accuracy. If the audio is fluid and comprehensible, click on the 'Validate Audio' option. Instead, if you need to make further adjustments, you can change the text and regenerate the audio for a maximum of three times.",
@@ -753,23 +758,31 @@ function ChapterTranslationPage() {
             border: '1px solid #D1D5DB',
             borderRadius: '8px',
             padding: '20px',
+            boxShadow: '0px 1px 1px 0px #00000040',
           }}
         >
           {/* Language Toggle */}
-          <div className="mb-6">
+          <div className="mb-5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-[10px]">
                 <span className="text-sm font-medium text-gray-900">
                   {t('translate.language', { defaultValue: 'Language' })}
                 </span>
-                <select className="bg-white border border-gray-300 rounded px-3 py-1 text-sm text-orange-500">
-                  <option>English</option>
-                </select>
+                {/* Custom select with left arrow */}
+                <div className="relative">
+                  <select className="appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-[225px] h-[34px] pl-8 pr-3 py-1">
+                    <option>English</option>
+                  </select>
+                  {/* Black arrow icon */}
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black text-xs">
+                    ▼
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">⇄</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-normal text-gray-900">
                   {t('translate.translateTo', { defaultValue: 'Translate to' })}
                 </span>
                 <span className="text-orange-500">Italiano</span>
@@ -838,7 +851,7 @@ function ChapterTranslationPage() {
               className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
             >
               <div
-                className={`w-6 h-6 border-2 flex items-center justify-center ${
+                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
                   validationStates.transcriptionValidated
                     ? 'bg-orange-500 border-orange-500'
                     : 'bg-transparent border-gray-400'
@@ -860,78 +873,91 @@ function ChapterTranslationPage() {
           </div>
         </div>
 
-        {/* Audio Player Placeholder */}
-        <div
-          className="rounded-lg p-4 mb-6 mt-8"
-          style={{
-            backgroundColor: '#FDF1E8',
-            border: '1px solid #F97316',
-          }}
-        >
-          {/* Main controls - Play button, progress bar, time */}
-          <div className="flex items-center gap-4 mb-3">
+        {/* Audio Player, Validate Audio & Instructions Section */}
+        <div className="flex flex-col items-center gap-[10px] px-[10px] mt-10">
+          {/* Audio Player Placeholder */}
+          <div
+            className="rounded-lg p-4 w-full"
+            style={{
+              backgroundColor: '#FDF1E8',
+              border: '1px solid #FF5C00',
+            }}
+          >
+            {/* Main controls - Play button, progress bar, time */}
+            <div className="flex items-center gap-4 mb-3">
+              <button type="button" className="focus:outline-none">
+                <img src={PlayIcon} alt="Play" className="w-[34px] h-[35px]" />
+              </button>
+              <div className="flex-1">
+                <div className="bg-orange-200 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-orange-500 h-full rounded-full"
+                    style={{ width: '45%' }}
+                  />
+                </div>
+              </div>
+              <span className="text-sm text-gray-600">0:45</span>
+            </div>
+
+            {/* Secondary controls - Rewind 15s, Speed, Forward 15s */}
+            <div className="flex items-center justify-center gap-5 mt-4">
+              {/* Rewind 15s */}
+              <button type="button" className="focus:outline-none">
+                <img
+                  src={Back15Icon}
+                  alt="Rewind 15 seconds"
+                  className="w-[18px] h-[19.32px]"
+                />
+              </button>
+
+              {/* Playback speed */}
+              <span className="text-sm text-gray-900">1x</span>
+
+              {/* Forward 15s */}
+              <button type="button" className="focus:outline-none">
+                <img
+                  src={Forward15Icon}
+                  alt="Forward 15 seconds"
+                  className="w-[18px] h-[19.32px]"
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Validate Audio Section */}
+          <div className="flex flex-col items-center gap-[10px]">
             <button
               type="button"
-              className="bg-orange-500 text-white w-12 h-12 rounded-full flex items-center justify-center"
+              onClick={handleValidateAudio}
+              className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
             >
-              ▶
-            </button>
-            <div className="flex-1">
-              <div className="bg-orange-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-orange-500 h-full rounded-full"
-                  style={{ width: '45%' }}
-                />
+              <div
+                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
+                  validationStates.audioValidated
+                    ? 'bg-orange-500 border-orange-500'
+                    : 'bg-transparent border-gray-400'
+                }`}
+              >
+                {validationStates.audioValidated && (
+                  <span className="text-white text-sm">✓</span>
+                )}
               </div>
-            </div>
-            <span className="text-sm text-gray-600">0:45</span>
-          </div>
-
-          {/* Secondary controls - Rewind, Speed, Forward */}
-          <div className="flex items-center justify-center gap-4">
-            <button type="button" className="text-gray-500 hover:text-gray-700">
-              ⏪
-            </button>
-            <button type="button" className="text-gray-500 hover:text-gray-700">
-              1x
-            </button>
-            <button type="button" className="text-gray-500 hover:text-gray-700">
-              ⏩
-            </button>
-          </div>
-        </div>
-
-        {/* Validate Audio Section */}
-        <div className="flex flex-col gap-4">
-          <button
-            type="button"
-            onClick={handleValidateAudio}
-            className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
-          >
-            <div
-              className={`w-6 h-6 border-2 flex items-center justify-center ${
-                validationStates.audioValidated
-                  ? 'bg-orange-500 border-orange-500'
-                  : 'bg-transparent border-gray-400'
-              }`}
-            >
-              {validationStates.audioValidated && (
-                <span className="text-white text-sm">✓</span>
-              )}
-            </div>
-            <span className="text-gray-900 font-medium">
-              {t('translate.validateAudio', { defaultValue: 'Validate audio' })}
-              <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
-                *
+              <span className="text-gray-900 font-medium">
+                {t('translate.validateAudio', {
+                  defaultValue: 'Validate audio',
+                })}
+                <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
+                  *
+                </span>
               </span>
-            </span>
-          </button>
-          <p className="text-orange-600 text-sm text-center">
-            {t('translate.reviewInstructions', {
-              defaultValue:
-                'Review the transcription, make any necessary corrections, and then generate the audio.',
-            })}
-          </p>
+            </button>
+            <p className="text-orange-600 text-sm text-center">
+              {t('translate.reviewInstructions', {
+                defaultValue:
+                  'Review the transcription, make any necessary corrections, and then generate the audio.',
+              })}
+            </p>
+          </div>
         </div>
       </div>
 
