@@ -3,17 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { TranslationStatus } from '@blms/constants';
-import Back15Icon from '#src/assets/icons/back_15.svg';
 import BookClosedIcon from '#src/assets/icons/book_closed.svg';
 import BreadcrumbArrowIcon from '#src/assets/icons/breadcrumb_navigation_arrow_orange.svg';
 import CheckCircleGrayIcon from '#src/assets/icons/check_circle_gray.svg';
 import CheckCircleOrangeIcon from '#src/assets/icons/check_circle_orange.svg';
 import DroplistArrowIcon from '#src/assets/icons/droplist_arrow_balck.svg';
-import Forward15Icon from '#src/assets/icons/forward_15.svg';
 import OrangePill from '#src/assets/icons/orange_pill_color.svg';
-import PlayIcon from '#src/assets/icons/play.svg';
+
+// Components
 import { PageLayout } from '#src/components/page-layout.tsx';
+import { AudioPlayer } from '#src/components/translation/audio-player.tsx';
+import { PptLinkSection } from '#src/components/translation/ppt-link.tsx';
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
+
+// Other utilities
 import { BackLink } from '#src/molecules/backlink.tsx';
 import { trpcClient } from '#src/utils/trpc.ts';
 
@@ -43,6 +46,10 @@ interface CourseTranslationSlide {
   partId: string;
   chapterId: string;
   slideId: string;
+  slideNumber?: number;
+  pptValidated?: boolean;
+  transcriptionValidated?: boolean;
+  audioValidated?: boolean;
   pptResourcePath: string | null;
   audioResourcePath: string | null;
   originalContent: string | null;
@@ -133,14 +140,17 @@ function ChapterTranslationPage() {
     });
   }, [courseData]);
 
-  // Reset validation states when slide index changes
+  // Sync validation states with current slide data
   useEffect(() => {
+    if (!chapterData) return;
+    const slide = chapterData.slides[currentSlideIndex];
+    if (!slide) return;
     setValidationStates({
-      presentationValidated: false,
-      transcriptionValidated: false,
-      audioValidated: false,
+      presentationValidated: slide.pptValidated ?? false,
+      transcriptionValidated: slide.transcriptionValidated ?? false,
+      audioValidated: slide.audioValidated ?? false,
     });
-  }, [currentSlideIndex]);
+  }, [chapterData, currentSlideIndex]);
 
   // Scroll to top when slide changes
   useEffect(() => {
@@ -215,16 +225,48 @@ function ChapterTranslationPage() {
   ) => {
     if (!chapterData) return;
 
+    let previouslyValidated = false;
     setChapterData((prev) => {
       if (!prev) return prev;
 
       return {
         ...prev,
         slides: prev.slides.map((slide) =>
-          slide.slideId === slideId ? { ...slide, translatedContent } : slide,
+          slide.slideId === slideId
+            ? {
+                ...slide,
+                translatedContent,
+                transcriptionValidated: (() => {
+                  previouslyValidated = slide.transcriptionValidated ?? false;
+                  return false;
+                })(),
+              }
+            : slide,
         ),
       };
     });
+
+    // Reflect immediately in checkbox UI
+    setValidationStates((prev) => ({
+      ...prev,
+      transcriptionValidated: false,
+    }));
+
+    // If the transcript was previously validated, immediately mark it unvalidated in DB
+    if (previouslyValidated) {
+      trpcClient.content.updateCourseTranslationSlide
+        .mutate({
+          courseId,
+          language: targetLanguage,
+          chapterId,
+          slideId,
+          transcriptionValidated: false,
+        } as any)
+        .catch((err) =>
+          console.error('Error auto-unvalidating transcript', err),
+        );
+    }
+
     setHasUnsavedChanges(true);
   };
 
@@ -242,7 +284,8 @@ function ChapterTranslationPage() {
         slideId: currentSlide.slideId,
         translatedContent: currentSlide.translatedContent || '',
         status: TranslationStatus.InProgress,
-      });
+        transcriptionValidated: false,
+      } as any);
 
       setHasUnsavedChanges(false);
       console.log('Changes saved successfully');
@@ -251,10 +294,25 @@ function ChapterTranslationPage() {
     }
   };
 
-  const handleValidatePresentation = () => {
+  const handleValidatePresentation = async () => {
     console.log('Validate presentation clicked');
     setValidationStates((prev) => ({ ...prev, presentationValidated: true }));
-    // TODO: Implement presentation validation
+
+    if (!chapterData) return;
+    const currentSlide = chapterData.slides[currentSlideIndex];
+    if (!currentSlide) return;
+
+    try {
+      await trpcClient.content.updateCourseTranslationSlide.mutate({
+        courseId,
+        language: targetLanguage,
+        chapterId,
+        slideId: currentSlide.slideId,
+        pptValidated: true,
+      } as any);
+    } catch (error) {
+      console.error('Error validating presentation:', error);
+    }
   };
 
   const handleGenerateAudio = () => {
@@ -277,7 +335,6 @@ function ChapterTranslationPage() {
     }
 
     try {
-      // Save the translated content to the database
       await trpcClient.content.updateCourseTranslationSlide.mutate({
         courseId,
         language: targetLanguage,
@@ -285,15 +342,14 @@ function ChapterTranslationPage() {
         slideId: currentSlide.slideId,
         translatedContent: currentSlide.translatedContent || '',
         status: TranslationStatus.InProgress,
-      });
+        transcriptionValidated: true,
+      } as any);
 
-      // Mark transcription as validated
       setValidationStates((prev) => ({
         ...prev,
         transcriptionValidated: true,
       }));
 
-      // Clear unsaved changes flag since we just saved
       setHasUnsavedChanges(false);
 
       console.log('Transcription validated and saved successfully');
@@ -303,10 +359,25 @@ function ChapterTranslationPage() {
     }
   };
 
-  const handleValidateAudio = () => {
+  const handleValidateAudio = async () => {
     console.log('Validate audio clicked');
     setValidationStates((prev) => ({ ...prev, audioValidated: true }));
-    // TODO: Implement audio validation
+
+    if (!chapterData) return;
+    const currentSlide = chapterData.slides[currentSlideIndex];
+    if (!currentSlide) return;
+
+    try {
+      await trpcClient.content.updateCourseTranslationSlide.mutate({
+        courseId,
+        language: targetLanguage,
+        chapterId,
+        slideId: currentSlide.slideId,
+        audioValidated: true,
+      } as any);
+    } catch (error) {
+      console.error('Error validating audio:', error);
+    }
   };
 
   const handleNextSlide = () => {
@@ -772,42 +843,15 @@ function ChapterTranslationPage() {
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={handleSaveChanges}
-              disabled={!hasUnsavedChanges}
-              className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t('translate.saveChanges', { defaultValue: 'Save changes' })}
-            </button>
-            <button
-              type="button"
-              onClick={handleValidatePresentation}
-              className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
-            >
-              <div
-                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
-                  validationStates.presentationValidated
-                    ? 'bg-orange-500 border-orange-500'
-                    : 'bg-transparent border-gray-400'
-                }`}
-              >
-                {validationStates.presentationValidated && (
-                  <span className="text-white text-sm">✓</span>
-                )}
-              </div>
-              <span className="text-gray-900 font-medium">
-                {t('translate.validatePresentationPPT', {
-                  defaultValue: 'Validate presentation PPT',
-                })}
-                <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
-                  *
-                </span>
-              </span>
-            </button>
-          </div>
+          <PptLinkSection
+            courseId={courseId}
+            slideId={currentSlide?.slideId ?? ''}
+            language={targetLanguage}
+            onValidate={handleValidatePresentation}
+            validated={validationStates.presentationValidated}
+            onSaveChanges={handleSaveChanges}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
         </div>
       </div>
 
@@ -949,92 +993,13 @@ function ChapterTranslationPage() {
           </div>
         </div>
 
-        {/* Audio Player, Validate Audio & Instructions Section */}
-        <div className="flex flex-col items-center gap-[10px] px-[10px] mt-10">
-          {/* Audio Player Placeholder */}
-          <div
-            className="rounded-lg p-4 w-full"
-            style={{
-              backgroundColor: '#FDF1E8',
-              border: '1px solid #FF5C00',
-            }}
-          >
-            {/* Main controls - Play button, progress bar, time */}
-            <div className="flex items-center gap-4 mb-3">
-              <button type="button" className="focus:outline-none">
-                <img src={PlayIcon} alt="Play" className="w-[34px] h-[35px]" />
-              </button>
-              <div className="flex-1">
-                <div className="bg-orange-200 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-orange-500 h-full rounded-full"
-                    style={{ width: '45%' }}
-                  />
-                </div>
-              </div>
-              <span className="text-sm text-gray-600">0:45</span>
-            </div>
-
-            {/* Secondary controls - Rewind 15s, Speed, Forward 15s */}
-            <div className="flex items-center justify-center gap-5 mt-4">
-              {/* Rewind 15s */}
-              <button type="button" className="focus:outline-none">
-                <img
-                  src={Back15Icon}
-                  alt="Rewind 15 seconds"
-                  className="w-[18px] h-[19.32px]"
-                />
-              </button>
-
-              {/* Playback speed */}
-              <span className="text-sm text-gray-900">1x</span>
-
-              {/* Forward 15s */}
-              <button type="button" className="focus:outline-none">
-                <img
-                  src={Forward15Icon}
-                  alt="Forward 15 seconds"
-                  className="w-[18px] h-[19.32px]"
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Validate Audio Section */}
-          <div className="flex flex-col items-center gap-[10px]">
-            <button
-              type="button"
-              onClick={handleValidateAudio}
-              className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
-            >
-              <div
-                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
-                  validationStates.audioValidated
-                    ? 'bg-orange-500 border-orange-500'
-                    : 'bg-transparent border-gray-400'
-                }`}
-              >
-                {validationStates.audioValidated && (
-                  <span className="text-white text-sm">✓</span>
-                )}
-              </div>
-              <span className="text-gray-900 font-medium">
-                {t('translate.validateAudio', {
-                  defaultValue: 'Validate audio',
-                })}
-                <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
-                  *
-                </span>
-              </span>
-            </button>
-            <p className="text-orange-600 text-sm text-center">
-              {t('translate.reviewInstructions', {
-                defaultValue:
-                  'Review the transcription, make any necessary corrections, and then generate the audio.',
-              })}
-            </p>
-          </div>
-        </div>
+        <AudioPlayer
+          courseId={courseId}
+          slideId={currentSlide?.slideId ?? ''}
+          language={targetLanguage}
+          validated={validationStates.audioValidated}
+          onValidate={handleValidateAudio}
+        />
       </div>
 
       {/* Action Button - Next Slide or Create Video */}

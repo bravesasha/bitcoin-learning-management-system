@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.828.0
+        version: 3.828.0
+      '@aws-sdk/lib-storage':
+        specifier: ^3.828.0
+        version: 3.828.0(@aws-sdk/client-s3@3.828.0)
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4

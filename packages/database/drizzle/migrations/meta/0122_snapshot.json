@@ -1,5 +1,5 @@
 {
-  "id": "79668008-c3f3-4741-8800-2ce45bb7a38d",
+  "id": "f1dd6d6c-7616-47a7-9b2c-c9a12e4d0190",
   "prevId": "a083b907-b8fb-43a3-a796-d5dc18d36178",
   "version": "7",
   "dialect": "postgresql",
@@ -1770,6 +1770,33 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "slide_number": {
+          "name": "slide_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ppt_validated": {
+          "name": "ppt_validated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "transcription_validated": {
+          "name": "transcription_validated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "audio_validated": {
+          "name": "audio_validated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "ppt_resource_path": {
           "name": "ppt_resource_path",
