@@ -1,5 +1,10 @@
-import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Back15Icon from '#src/assets/icons/back_15.svg';
@@ -35,9 +40,117 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const { t } = useTranslation();
+  const playbackRates = [1, 1.5, 2] as const;
+  const [playbackRateIndex, setPlaybackRateIndex] = useState(0);
+  const playbackRate = playbackRates[playbackRateIndex];
+  const progressBarRef = useRef<HTMLButtonElement | null>(null);
+  const BAR_WIDTH = 6; // px
+  const BAR_GAP = 2; // px
 
+  const [numBars, setNumBars] = useState(0);
+  const [rawHeights, setRawHeights] = useState<number[] | null>(null);
+
+  const displayHeights = React.useMemo(() => {
+    if (!rawHeights || numBars === 0) return [] as number[];
+
+    const groupSize = rawHeights.length / numBars;
+    const heights: number[] = [];
+    for (let i = 0; i < numBars; i++) {
+      const idx = Math.floor(i * groupSize);
+      heights.push(rawHeights[idx] ?? 20);
+    }
+    return heights;
+  }, [rawHeights, numBars]);
+
+  const placeholderHeights = React.useMemo(() => {
+    // Uniform bars while waveform is loading
+    if (numBars === 0) return [] as number[];
+    return Array.from({ length: numBars }, () => 20);
+  }, [numBars]);
+
+  // Determine how many bars fit in the available width
+  useLayoutEffect(() => {
+    if (!progressBarRef.current) return;
+
+    const computeBars = () => {
+      const width = progressBarRef.current!.clientWidth;
+      const bars = Math.max(
+        10,
+        Math.floor((width + BAR_GAP) / (BAR_WIDTH + BAR_GAP)),
+      );
+      setNumBars(bars);
+    };
+
+    computeBars();
+
+    const ro = new ResizeObserver(computeBars);
+    ro.observe(progressBarRef.current);
+
+    return () => ro.disconnect();
+  }, []);
+
+  // Build audio URL early so hooks below can use it safely
   const url = buildAudioApiUrl(courseId, slideId, language);
+
+  // Fetch & decode audio ONCE to build a high-resolution amplitude array.
+  useEffect(() => {
+    if (exists !== true || duration === 0 || rawHeights) return;
+
+    let cancelled = false;
+
+    const generateWaveform = async () => {
+      try {
+        // Fetch the full audio file as an ArrayBuffer
+        const resp = await fetch(url);
+        if (!resp.ok) return;
+
+        const arrayBuffer = await resp.arrayBuffer();
+
+        const AudioContextClass: typeof AudioContext =
+          // @ts-ignore legacy Safari
+          window.AudioContext || (window as any).webkitAudioContext;
+        const audioCtx = new AudioContextClass();
+
+        const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
+
+        const channelData = audioBuf.getChannelData(0); // first channel
+
+        const TARGET_RAW_BARS = 400; // high-res baseline
+        const samplesPerRawBar = Math.max(
+          1,
+          Math.floor(channelData.length / TARGET_RAW_BARS),
+        );
+
+        const tmp: number[] = [];
+        for (let i = 0; i < TARGET_RAW_BARS; i++) {
+          const start = i * samplesPerRawBar;
+          let sum = 0;
+          for (let j = 0; j < samplesPerRawBar; j++) {
+            sum += Math.abs(channelData[start + j] || 0);
+          }
+          const avg = sum / samplesPerRawBar;
+          tmp.push(avg);
+        }
+
+        // Normalize 0-1 amplitudes to 10-40 px range once
+        const max = Math.max(...tmp) || 1;
+        const normalized = tmp.map((v) => 10 + (v / max) * 30);
+
+        if (!cancelled) setRawHeights(normalized);
+
+        audioCtx.close();
+      } catch (err) {
+        console.error('Failed to generate waveform', err);
+      }
+    };
+
+    generateWaveform();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [exists, duration, url]);
+  const { t } = useTranslation();
 
   // Probe file existence
   useEffect(() => {
@@ -63,6 +176,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audioRef.current.src = url;
     }
 
+    // Apply the current playback rate whenever a new Audio object is created
+    audioRef.current.playbackRate = playbackRate;
+
     const audio = audioRef.current;
 
     const onLoaded = () => setDuration(audio.duration || 0);
@@ -80,6 +196,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audio.removeEventListener('ended', onEnded);
     };
   }, [exists, url]);
+
+  // Update playback rate on the underlying audio element whenever it changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -100,14 +223,58 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     );
   };
 
+  const handleProgressClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!audioRef.current || !progressBarRef.current || duration === 0) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = Math.min(Math.max(clickX / rect.width, 0), 1);
+    const newTime = percent * duration;
+
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  // Allow keyboard interaction with the progress bar for accessibility
+  const handleProgressKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!exists) return;
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        // Seek backwards 5 seconds
+        seek(-5);
+        e.preventDefault();
+        break;
+      case 'ArrowRight':
+        // Seek forwards 5 seconds
+        seek(5);
+        e.preventDefault();
+        break;
+      case ' ':
+      case 'Enter':
+        // Toggle play / pause
+        togglePlay();
+        e.preventDefault();
+        break;
+      default:
+        break;
+    }
+  };
+
   const formatTime = useCallback((sec: number) => {
-    if (!Number.isFinite(sec)) return '0:00';
-    const m = Math.floor(sec / 60);
+    if (!Number.isFinite(sec)) return '00:00';
+    const m = Math.floor(sec / 60)
+      .toString()
+      .padStart(2, '0');
     const s = Math.floor(sec % 60)
       .toString()
       .padStart(2, '0');
     return `${m}:${s}`;
   }, []);
+
+  const cyclePlaybackRate = () => {
+    setPlaybackRateIndex((prev) => (prev + 1) % playbackRates.length);
+  };
 
   return (
     <div className="flex flex-col items-center gap-[10px] px-[10px] mt-10">
@@ -153,17 +320,50 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               className="w-[34px] h-[35px] opacity-30"
             />
           )}
-          <div className="flex-1">
-            <div className="bg-orange-200 h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-orange-500 h-full rounded-full"
-                style={{
-                  width: `${duration ? (currentTime / duration) * 100 : 0}%`,
-                }}
-              />
-            </div>
-          </div>
-          <span className="text-sm text-gray-600">{formatTime(duration)}</span>
+          {/* Waveform progress bar */}
+          <button
+            type="button"
+            className="flex-1 flex items-center h-[40px] cursor-pointer min-w-0 overflow-hidden bg-transparent p-0 border-0"
+            style={{ gap: `${BAR_GAP}px` }}
+            ref={progressBarRef}
+            onClick={handleProgressClick}
+            onKeyDown={handleProgressKeyDown}
+            disabled={!exists}
+          >
+            {(rawHeights ? displayHeights : placeholderHeights).map(
+              (h, idx) => {
+                const progressRatio = duration ? currentTime / duration : 0;
+                const globalPosStart = idx / numBars;
+                const globalPosEnd = (idx + 1) / numBars;
+
+                // Determine fill fraction for this bar: 0-1
+                let fill = 0;
+                if (progressRatio <= globalPosStart) fill = 0;
+                else if (progressRatio >= globalPosEnd) fill = 1;
+                else fill = (progressRatio - globalPosStart) * numBars; // 0-1 within bar
+
+                return (
+                  <div
+                    key={`bar-${globalPosStart}`}
+                    className={`relative rounded-md overflow-hidden ${rawHeights ? 'bg-gray-400' : 'bg-gray-300'}`}
+                    style={{
+                      height: `${h}px`,
+                      pointerEvents: 'none',
+                      width: `${BAR_WIDTH}px`,
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0 bg-orange-500"
+                      style={{ width: `${fill * 100}%` }}
+                    />
+                  </div>
+                );
+              },
+            )}
+          </button>
+          <span className="text-sm text-gray-600">
+            {`${formatTime(currentTime)} / ${formatTime(duration)}`}
+          </span>
         </div>
 
         {/* Secondary controls */}
@@ -178,11 +378,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <img
               src={Back15Icon}
               alt="Rewind 15 seconds"
-              className="w-[18px] h-[19.32px]"
+              className="w-[22px] h-[23.5px]"
             />
           </button>
-          {/* Playback speed placeholder */}
-          <span className="text-sm text-gray-900">1x</span>
+          {/* Playback speed toggle */}
+          <button
+            type="button"
+            onClick={cyclePlaybackRate}
+            disabled={!exists}
+            className="text-sm font-medium text-gray-900 focus:outline-none"
+            title={t('translate.changeSpeed', {
+              defaultValue: 'Change playback speed',
+            })}
+          >
+            {playbackRate}x
+          </button>
           {/* Forward 15s */}
           <button
             type="button"
@@ -193,7 +403,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <img
               src={Forward15Icon}
               alt="Forward 15 seconds"
-              className="w-[18px] h-[19.32px]"
+              className="w-[22px] h-[23.5px]"
             />
           </button>
         </div>
@@ -203,7 +413,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <div className="mt-4 text-center">
             <a
               href={url}
-              download={`${slideId}.m4a`}
+              download={`${slideId}.mp3`}
               className="text-sm text-orange-600 underline hover:text-orange-500"
             >
               {t('translate.downloadAudio', { defaultValue: 'Download audio' })}

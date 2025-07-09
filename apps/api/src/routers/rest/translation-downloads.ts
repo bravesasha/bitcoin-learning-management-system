@@ -151,31 +151,91 @@ export const createRestTranslationDownloadRoutes = async (
           throw new BadRequest('Missing courseId, slideId or language');
         }
 
-        // Path format used by the contribute front-end for generated audio files
-        // <courseId>/<slideId>/<lang>/audio/<slideId>.m4a
-        const key = `contribute-detailed/${courseId}/${slideId}/${language}/audio/${slideId}.m4a`;
+        // We support either .mp3 (preferred) or legacy .m4a encodings
+        // <courseId>/<slideId>/<lang>/audio/<slideId>.(mp3|m4a)
+        const buildKey = (ext: 'mp3' | 'm4a') =>
+          `contribute-detailed/${courseId}/${slideId}/${language}/audio/${slideId}.${ext}`;
 
-        // Attempt to fetch metadata first – lets us set proper headers when available
-        const head = await dependencies.s3.head(key).catch(() => null);
+        let key = buildKey('mp3');
+        let head = await dependencies.s3.head(key).catch(() => null);
 
-        const stream = await dependencies.s3.getStream(key);
+        // Fallback to .m4a if mp3 is not found
+        if (!head) {
+          key = buildKey('m4a');
+          head = await dependencies.s3.head(key).catch(() => null);
+        }
+
+        // File does not exist – 404 early
+        if (!head?.contentLength) {
+          res.status(404).send('Not found');
+          return;
+        }
+
+        // Handle HTTP Range requests so the browser can stream / seek within the audio.
+        const range = req.headers.range;
+
+        // -----------------------------
+        // No range header – stream full file as before
+        // -----------------------------
+        if (!range) {
+          const stream = await dependencies.s3.getStream(key);
+
+          if (!stream) {
+            res.status(404).send('Not found');
+            return;
+          }
+
+          res.setHeader('Content-Type', head?.contentType || 'audio/mp4');
+          res.setHeader('Content-Length', String(head.contentLength));
+          res.setHeader('Accept-Ranges', 'bytes');
+
+          return void stream.pipe(res);
+        }
+
+        // -----------------------------
+        // Range header present – parse it and stream partial content
+        // -----------------------------
+        const byteRange = /bytes=(\d+)-(\d*)/.exec(range);
+
+        if (!byteRange) {
+          res.status(416).send('Invalid range');
+          return;
+        }
+
+        const start = Number(byteRange[1]);
+        const endRaw = byteRange[2];
+        const end = endRaw ? Number(endRaw) : head.contentLength - 1;
+
+        if (
+          Number.isNaN(start) ||
+          Number.isNaN(end) ||
+          start > end ||
+          end >= head.contentLength
+        ) {
+          res.status(416).send('Requested range not satisfiable');
+          return;
+        }
+
+        const chunkSize = end - start + 1;
+
+        const stream = await dependencies.s3.getRangeStream(key, start, end);
 
         if (!stream) {
           res.status(404).send('Not found');
           return;
         }
 
-        // Relay content-type & length if we have them, else fall back to generic audio
-        if (head?.contentType) {
-          res.setHeader('Content-Type', head.contentType);
-        } else {
-          res.setHeader('Content-Type', 'audio/mp4');
-        }
-        if (head?.contentLength) {
-          res.setHeader('Content-Length', String(head.contentLength));
-        }
+        res.status(206);
+        res.setHeader('Content-Type', head?.contentType || 'audio/mp4');
+        res.setHeader('Content-Length', String(chunkSize));
+        res.setHeader(
+          'Content-Range',
+          `bytes ${start}-${end}/${head.contentLength}`,
+        );
+        res.setHeader('Accept-Ranges', 'bytes');
 
         stream.pipe(res);
+        return;
       } catch (error) {
         req.log('Error:', error);
         if (error instanceof NoSuchKey) {

@@ -25,6 +25,20 @@ interface PutOptions {
 export interface S3Service {
   getBlob(key: string): Promise<Uint8Array | null>;
   getStream(key: string): Promise<Readable | null>;
+  /**
+   * Return a byte range of the requested file as a stream. If the range is
+   * invalid or the object does not exist, `null` is returned.
+   *
+   * @param key   Path in the bucket
+   * @param start Inclusive 0-based start byte offset
+   * @param end   Inclusive end byte offset – if omitted or larger than the
+   *              object size the request is treated as `start-` (to EOF)
+   */
+  getRangeStream(
+    key: string,
+    start: number,
+    end?: number,
+  ): Promise<Readable | null>;
   put(key: string, body: Data, opts?: PutOptions): Promise<void>;
   upload(key: string, stream: Readable, opts?: PutOptions): Promise<void>;
   head(key: string): Promise<S3Head>;
@@ -79,6 +93,24 @@ export const createS3Service = (config: S3Config): S3Service => {
           // Any needed here to avoid conflicting definitions between node and browser
           return Readable.fromWeb(body.transformToWebStream() as any);
         });
+    },
+    // Return a portion of the requested file as a stream
+    getRangeStream(key: string, start: number, end?: number) {
+      const Range =
+        end !== undefined ? `bytes=${start}-${end}` : `bytes=${start}-`;
+
+      return s3
+        .send(new GetObjectCommand({ Bucket, Key: base(key), Range }))
+        .then((res) => res.Body)
+        .then((body) => {
+          if (!body) {
+            return null;
+          }
+
+          // Cast to Node stream – see note above
+          return Readable.fromWeb(body.transformToWebStream() as any);
+        })
+        .catch(() => null);
     },
     // Upload a file to the bucket
     put(key: string, body: Data, { contentType, metadata }: PutOptions = {}) {
