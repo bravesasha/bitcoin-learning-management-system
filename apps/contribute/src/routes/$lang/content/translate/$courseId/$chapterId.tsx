@@ -13,6 +13,7 @@ import OrangePill from '#src/assets/icons/orange_pill_color.svg';
 // Components
 import { PageLayout } from '#src/components/page-layout.tsx';
 import { AudioPlayer } from '#src/components/translation/audio-player.tsx';
+import { OnlyOfficeSlideEditor } from '#src/components/translation/onlyoffice-slide-editor.tsx';
 import { PptLinkSection } from '#src/components/translation/ppt-link.tsx';
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
 
@@ -796,7 +797,7 @@ function ChapterTranslationPage() {
           })}
         </p>
 
-        {/* Grey Container for the entire editor */}
+        {/* --- ONLYOFFICE (Beta) Duplicate Editor --- */}
         <div
           style={{
             backgroundColor: '#F5F5F5',
@@ -804,42 +805,31 @@ function ChapterTranslationPage() {
             borderRadius: '8px',
             padding: '20px',
             boxShadow: '0px 1px 1px 0px #00000040',
+            marginTop: '40px',
           }}
         >
-          {/* Language Toggle */}
           <div className="mb-5">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-900">
-                {t('translate.originalLanguage', {
-                  defaultValue: 'Original language',
-                })}
-              </span>
-              <span className="text-orange-500">Français</span>
-              <span className="text-gray-400">⇄</span>
-              <span className="text-sm font-medium text-gray-900">
-                {t('translate.translateTo', { defaultValue: 'Translate to' })}
-              </span>
-              <span className="text-orange-500">Italiano</span>
-              <button
-                type="button"
-                className="ml-auto border border-[#F97316] bg-gray-100 text-[#F97316] px-4 py-1 rounded-[8px] text-sm hover:bg-orange-50 transition-colors"
-              >
-                {t('translate.enVersion', { defaultValue: 'EN version' })}
-              </button>
-            </div>
+            <span className="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-600 rounded">
+              NEW
+            </span>
+            <h4 className="text-lg font-semibold text-gray-900 mt-2">
+              ONLYOFFICE Presentation Editor
+            </h4>
+            <p className="text-sm text-gray-600">
+              Edit the slide with ONLYOFFICE for full-fidelity PowerPoint
+              editing. Changes are saved automatically when you click the save
+              icon inside the editor.
+            </p>
           </div>
 
-          {/* YouTube Video Embed */}
           <div className="mb-6">
-            <iframe
-              width="100%"
-              height="400"
-              src="https://www.youtube.com/embed/qBaVzibTptM"
-              title="Course Presentation Video"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="rounded-lg"
+            <OnlyOfficeSlideEditor
+              fileUrl={
+                currentSlide?.slideId
+                  ? `/api/translation-downloads/pptx/${courseId}/${currentSlide.slideId}/${targetLanguage}`
+                  : null
+              }
+              className="w-full"
             />
           </div>
 

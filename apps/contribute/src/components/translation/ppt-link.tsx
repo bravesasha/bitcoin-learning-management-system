@@ -36,6 +36,7 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
   useEffect(() => {
     let cancelled = false;
     setExists(null);
+
     fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } })
       .then((res) => !cancelled && setExists(res.ok))
       .catch(() => !cancelled && setExists(false));
@@ -46,33 +47,37 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
 
   return (
     <>
-      {/* PPTX Link or status */}
-      {exists === null && (
-        <p className="mb-4 text-sm text-gray-500">Checking PPTX resource…</p>
-      )}
-      {exists === true && (
-        <div className="mb-4 flex flex-col items-start gap-2">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-500 underline text-sm"
-          >
-            {`${slideId}.pptx`}
-          </a>
-          {/* Temporary download link for testing */}
-          <a
-            href={url}
-            download={`${slideId}.pptx`}
-            className="text-sm text-orange-600 underline hover:text-orange-500"
-          >
-            Download PPTX
-          </a>
-        </div>
-      )}
-      {exists === false && (
-        <p className="mb-4 text-sm text-gray-500">PPTX resource not found.</p>
-      )}
+      {/* PPTX Resource Status */}
+      <div className="mb-4">
+        {exists === null && (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
+            Checking slide availability...
+          </div>
+        )}
+        {exists === true && (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <span>✓</span>
+            <span>Original slide loaded in editor above</span>
+            <a
+              href={url}
+              download={`${slideId}.pptx`}
+              className="ml-2 text-orange-600 underline hover:text-orange-500"
+            >
+              Download original
+            </a>
+          </div>
+        )}
+        {exists === false && (
+          <div className="flex items-center gap-2 text-sm text-amber-600">
+            <span>⚠️</span>
+            <span>
+              Original slide not found - you can create a new one using the
+              editor above
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Action Buttons (save & validate) */}
       <div className="flex justify-between items-center">

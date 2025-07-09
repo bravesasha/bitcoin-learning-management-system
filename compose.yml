@@ -124,6 +124,16 @@ services:
     volumes:
       - typesense:/usr/share/typesense/data
 
+  # ONLYOFFICE Document Server for rich PPTX editing
+  onlyoffice:
+    <<: *defaults
+    image: onlyoffice/documentserver:latest
+    ports:
+      - 80:80
+    healthcheck:
+      <<: *healthcheck
+      test: ['CMD', 'nc', '-zv', 'localhost', '80']
+
 volumes:
   typesense:
   corestore:
