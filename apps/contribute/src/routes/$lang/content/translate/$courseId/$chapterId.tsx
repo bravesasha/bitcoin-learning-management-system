@@ -1,23 +1,23 @@
+import { TranslationStatus } from '@blms/constants';
+import { Button } from '@blms/ui';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { TranslationStatus } from '@blms/constants';
 import BookClosedIcon from '#src/assets/icons/book_closed.svg';
 import BreadcrumbArrowIcon from '#src/assets/icons/breadcrumb_navigation_arrow_orange.svg';
 import CheckCircleGrayIcon from '#src/assets/icons/check_circle_gray.svg';
 import CheckCircleOrangeIcon from '#src/assets/icons/check_circle_orange.svg';
-import DroplistArrowIcon from '#src/assets/icons/droplist_arrow_balck.svg';
+// DroplistArrowIcon moved inside TranscriptionEditor component
 import OrangePill from '#src/assets/icons/orange_pill_color.svg';
 
-// Components
 import { PageLayout } from '#src/components/page-layout.tsx';
 import { AudioPlayer } from '#src/components/translation/audio-player.tsx';
 import { OnlyOfficeSlideEditor } from '#src/components/translation/onlyoffice-slide-editor.tsx';
 import { PptLinkSection } from '#src/components/translation/ppt-link.tsx';
+import { TranscriptionEditor } from '#src/components/translation/transcription-editor.tsx';
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
 
-// Other utilities
 import { BackLink } from '#src/molecules/backlink.tsx';
 import { trpcClient } from '#src/utils/trpc.ts';
 
@@ -839,8 +839,6 @@ function ChapterTranslationPage() {
             language={targetLanguage}
             onValidate={handleValidatePresentation}
             validated={validationStates.presentationValidated}
-            onSaveChanges={handleSaveChanges}
-            hasUnsavedChanges={hasUnsavedChanges}
           />
         </div>
       </div>
@@ -859,129 +857,16 @@ function ChapterTranslationPage() {
           })}
         </p>
 
-        {/* Grey Container for the transcription editor */}
-        <div
-          style={{
-            backgroundColor: '#F5F5F5',
-            border: '1px solid #D1D5DB',
-            borderRadius: '8px',
-            padding: '20px',
-            boxShadow: '0px 1px 1px 0px #00000040',
-          }}
-        >
-          {/* Language Toggle */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-[10px]">
-                <span className="text-sm font-medium text-gray-900">
-                  {t('translate.language', { defaultValue: 'Language' })}
-                </span>
-                {/* Custom select with left arrow */}
-                <div className="relative">
-                  <select className="appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-[225px] h-[34px] pl-8 pr-3 py-1">
-                    <option>English</option>
-                  </select>
-                  {/* Black arrow icon */}
-                  <img
-                    src={DroplistArrowIcon}
-                    alt=""
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-[11px] h-[7px]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">⇄</span>
-                <span className="text-sm font-normal text-gray-900">
-                  {t('translate.translateTo', { defaultValue: 'Translate to' })}
-                </span>
-                <span className="text-orange-500">Italiano</span>
-              </div>
-
-              <button
-                type="button"
-                className="bg-orange-100 text-orange-600 px-3 py-1 rounded text-sm"
-              >
-                {t('translate.limitTries', { defaultValue: 'Limit 2/3 tries' })}
-              </button>
-            </div>
-          </div>
-
-          {/* Side-by-side Translation Text Areas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Original Content */}
-            <div className="bg-white rounded-lg p-4 min-h-[200px]">
-              <div className="text-sm leading-relaxed text-gray-900">
-                {currentSlide?.originalContent ||
-                  'The second characteristic of a hash function is its resistance to forgery, or the so-called avalanche effect. This characteristic can be observed in a hash function if a small change to the input message results in a radical change to the output hash. If we return to our example with the input plan B and the function chat 256, we have seen that the hash generated is as follows: 24 F1 B ending in B 688. If we modify the input very slightly, this time using plan B with a lower-case B instead of the upper-case B, then the simple change of character will completely modify the output hash of chat 256. As you can see on the diagram, the axe that was 24 F1 at the start has beco...'}
-              </div>
-            </div>
-
-            {/* Translated Content */}
-            <div className="bg-white rounded-lg p-4 min-h-[200px]">
-              <textarea
-                value={currentSlide?.translatedContent || ''}
-                onChange={(e) =>
-                  currentSlide &&
-                  handleTranslationChange(currentSlide.slideId, e.target.value)
-                }
-                placeholder={t('translate.enterTranslation', {
-                  defaultValue: 'Enter your translation here...',
-                })}
-                className="w-full h-full min-h-[160px] border-0 resize-none focus:outline-none text-sm leading-relaxed bg-transparent text-gray-900"
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={handleGenerateAudio}
-                className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600"
-              >
-                {t('translate.generateAudio', {
-                  defaultValue: 'Generate audio',
-                })}
-              </button>
-              <button
-                type="button"
-                onClick={handleValidateTranscription}
-                className="border border-gray-300 bg-white text-gray-700 px-6 py-2 rounded hover:bg-gray-50"
-              >
-                {t('translate.editTranscript', {
-                  defaultValue: 'Edit transcript',
-                })}
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={handleValidateTranscription}
-              className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
-            >
-              <div
-                className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
-                  validationStates.transcriptionValidated
-                    ? 'bg-orange-500 border-orange-500'
-                    : 'bg-transparent border-gray-400'
-                }`}
-              >
-                {validationStates.transcriptionValidated && (
-                  <span className="text-white text-sm">✓</span>
-                )}
-              </div>
-              <span className="text-gray-900 font-medium">
-                {t('translate.validateTranscription', {
-                  defaultValue: 'Validate transcription',
-                })}
-                <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
-                  *
-                </span>
-              </span>
-            </button>
-          </div>
-        </div>
+        <TranscriptionEditor
+          originalContent={currentSlide?.originalContent || ''}
+          translatedContent={currentSlide?.translatedContent || ''}
+          onTranslationChange={(value) =>
+            currentSlide && handleTranslationChange(currentSlide.slideId, value)
+          }
+          onGenerateAudio={handleGenerateAudio}
+          onValidateTranscription={handleValidateTranscription}
+          transcriptionValidated={validationStates.transcriptionValidated}
+        />
 
         <AudioPlayer
           courseId={courseId}
@@ -996,49 +881,43 @@ function ChapterTranslationPage() {
       {chapterData && (
         <div className="flex justify-end">
           {isLastSlideOfCourse ? (
-            <button
-              type="button"
+            <Button
               onClick={handleCreateVideo}
               disabled={!allValidationsComplete}
-              className={`px-6 py-2 rounded flex items-center gap-2 transition-colors ${
-                allValidationsComplete
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              size="m"
+              variant="primary"
+              className="shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-[18px] leading-[18px] font-medium"
               title={
                 !allValidationsComplete
                   ? t('translate.completeAllValidations', {
                       defaultValue:
                         'Please complete all validations before proceeding',
                     })
-                  : ''
+                  : undefined
               }
             >
               {t('translate.createVideo', { defaultValue: 'Create video' })}
               <span>✓</span>
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
+            <Button
               onClick={handleNextSlide}
               disabled={!allValidationsComplete}
-              className={`px-6 py-2 rounded flex items-center gap-2 transition-colors ${
-                allValidationsComplete
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              size="m"
+              variant="primary"
+              className="shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-[18px] leading-[18px] font-medium"
               title={
                 !allValidationsComplete
                   ? t('translate.completeAllValidations', {
                       defaultValue:
                         'Please complete all validations before proceeding to the next slide',
                     })
-                  : ''
+                  : undefined
               }
             >
               {t('translate.nextSlide', { defaultValue: 'Next slide' })}
               <span>→</span>
-            </button>
+            </Button>
           )}
         </div>
       )}

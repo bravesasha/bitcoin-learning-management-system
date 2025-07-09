@@ -8,6 +8,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import Back15Icon from '#src/assets/icons/back_15.svg';
+import CampaignIcon from '#src/assets/icons/campaign.svg';
 import Forward15Icon from '#src/assets/icons/forward_15.svg';
 import PlayIcon from '#src/assets/icons/play.svg';
 
@@ -183,7 +184,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
     const onLoaded = () => setDuration(audio.duration || 0);
     const onTime = () => setCurrentTime(audio.currentTime);
-    const onEnded = () => setIsPlaying(false);
+    const onEnded = () => {
+      setIsPlaying(false);
+      if (!validated) {
+        // Auto-validate once the user has listened to the full audio
+        onValidate();
+      }
+    };
 
     audio.addEventListener('loadedmetadata', onLoaded);
     audio.addEventListener('timeupdate', onTime);
@@ -277,7 +284,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-[10px] px-[10px] mt-10">
+    <div className="flex flex-col items-center gap-4 px-[10px] mt-10">
       {/* Status messages */}
       {exists === null && (
         <p className="text-sm text-gray-500 mb-2">
@@ -408,46 +415,25 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </button>
         </div>
 
-        {/* Temporary download button for testing */}
-        {exists && (
-          <div className="mt-4 text-center">
-            <a
-              href={url}
-              download={`${slideId}.mp3`}
-              className="text-sm text-orange-600 underline hover:text-orange-500"
-            >
-              {t('translate.downloadAudio', { defaultValue: 'Download audio' })}
-            </a>
-          </div>
-        )}
+        {/* Download button removed */}
       </div>
 
-      {/* Validate */}
-      <div className="flex flex-col items-center gap-[10px]">
-        <button
-          type="button"
-          onClick={onValidate}
-          className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
-        >
-          <div
-            className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
-              validated
-                ? 'bg-orange-500 border-orange-500'
-                : 'bg-transparent border-gray-400'
-            }`}
-          >
-            {validated && <span className="text-white text-sm">✓</span>}
-          </div>
-          <span className="text-gray-900 font-medium">Validate audio</span>
-        </button>
-      </div>
+      {/* Auto-validation indicator removed */}
+
+      {/* Report issue button */}
+      <a
+        href="mailto:marjjhodl@proton.me?subject=Audio%20Translation%20Issue"
+        className="inline-flex items-center gap-2 px-[18px] py-[14px] rounded-[10px] border border-[#FF5C00] text-[#FF5C00] leading-[18px] font-medium hover:bg-orange-50 focus:outline-none"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img src={CampaignIcon} alt="Report" className="w-[21px] h-[17px]" />
+        {t('translate.reportIssue', { defaultValue: 'Report issue' })}
+      </a>
 
       {/* Review instructions */}
-      <p className="text-orange-600 text-sm text-center">
-        {t('translate.reviewInstructions', {
-          defaultValue:
-            'Review the transcription, make any necessary corrections, and then generate the audio.',
-        })}
+      <p className="text-orange-600 text-sm text-center whitespace-pre-line">
+        {t('translate.reviewInstructions')}
       </p>
     </div>
   );

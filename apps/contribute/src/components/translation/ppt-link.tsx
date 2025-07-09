@@ -7,8 +7,7 @@ interface PptLinkProps {
   language: string;
   onValidate: () => void;
   validated: boolean;
-  onSaveChanges: () => void;
-  hasUnsavedChanges: boolean;
+  // removed onSaveChanges and hasUnsavedChanges props
 }
 
 // Build the API URL that proxies the PPTX through the backend instead of exposing the raw S3 bucket.
@@ -26,8 +25,7 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
   language,
   onValidate,
   validated,
-  onSaveChanges,
-  hasUnsavedChanges,
+  // removed onSaveChanges and hasUnsavedChanges destructuring
 }) => {
   const [exists, setExists] = useState<boolean | null>(null);
 
@@ -79,16 +77,8 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
         )}
       </div>
 
-      {/* Action Buttons (save & validate) */}
-      <div className="flex justify-between items-center">
-        <button
-          type="button"
-          onClick={onSaveChanges}
-          disabled={!hasUnsavedChanges}
-          className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Save changes
-        </button>
+      {/* Validate presentation PPT */}
+      <div className="flex justify-end items-center">
         <button
           type="button"
           onClick={onValidate}

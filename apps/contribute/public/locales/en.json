@@ -1769,7 +1769,7 @@
     "enterTranslation": "Enter your translation here...",
     "validateTranscription": "Validate transcription",
     "validateAudio": "Validate audio",
-    "reviewInstructions": "Review the transcription, make any necessary corrections, and then generate the audio.",
+    "reviewInstructions": "Review the transcription, make any necessary corrections and then generate the audio.\nIf the audio has an issue that is not related to the transcription, you can report the problem",
     "createVideo": "Create video",
     "nextSlide": "Next slide",
     "completeAllValidations": "Please complete all validations before proceeding"
