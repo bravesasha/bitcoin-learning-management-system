@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import Back15Icon from '#src/assets/icons/back_15.svg';
 import CampaignIcon from '#src/assets/icons/campaign.svg';
 import Forward15Icon from '#src/assets/icons/forward_15.svg';
+import PauseIcon from '#src/assets/icons/pause.svg';
 import PlayIcon from '#src/assets/icons/play.svg';
 
 interface AudioPlayerProps {
@@ -315,9 +316,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               onClick={togglePlay}
             >
               <img
-                src={PlayIcon}
+                src={isPlaying ? PauseIcon : PlayIcon}
                 alt={isPlaying ? 'Pause' : 'Play'}
-                className={`w-[34px] h-[35px] ${isPlaying ? 'opacity-40' : ''}`}
+                className="w-[34px] h-[35px]"
               />
             </button>
           ) : (

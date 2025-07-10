@@ -785,7 +785,10 @@ function ChapterTranslationPage() {
 
       {/* Course Presentation Section */}
       <div className="mb-10">
-        <h3 className="text-xl font-bold mb-5 text-gray-900">
+        <h3
+          className="mb-5 text-gray-900 font-semibold text-[24px]"
+          style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}
+        >
           {t('translate.coursePresentation', {
             defaultValue: 'Course presentation',
           })}
@@ -845,7 +848,10 @@ function ChapterTranslationPage() {
 
       {/* Review Transcription & Generate Audio Section */}
       <div className="mt-10 mb-10">
-        <h3 className="text-xl font-bold mb-5 text-gray-900">
+        <h3
+          className="mb-5 text-gray-900 font-semibold text-[24px]"
+          style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}
+        >
           {t('translate.reviewTranscriptionGenerateAudio', {
             defaultValue: 'Review transcription & generate audio',
           })}

@@ -2,6 +2,7 @@ import { Button } from '@blms/ui';
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import DroplistArrowIcon from '#src/assets/icons/droplist_arrow_balck.svg';
+import './transcription-editor-scrollbar.css';
 
 interface TranscriptionEditorProps {
   originalContent: string;
@@ -34,7 +35,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
     <div
       style={{
         backgroundColor: '#F5F5F5',
-        border: '1px solid #D1D5DB',
+        border: '1px solid #CCCCCC',
         borderRadius: '8px',
         padding: '20px',
         boxShadow: '0px 1px 1px 0px #00000040',
@@ -42,9 +43,13 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
     >
       {/* Language Toggle */}
       <div className="mb-5">
-        <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4">
+          {/* Source language selector */}
           <div className="flex items-center gap-[10px]">
-            <span className="text-sm font-medium text-gray-900">
+            <span
+              className="text-[18px] font-semibold text-gray-900"
+              style={{ fontFamily: 'Rubik, sans-serif' }}
+            >
               {t('translate.language', { defaultValue: 'Language' })}
             </span>
             {/* Custom select with left arrow */}
@@ -60,38 +65,46 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               />
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
+          {/* Target language information */}
+          <div className="flex items-center gap-2 lg:justify-start justify-start">
             <span className="text-gray-400">⇄</span>
-            <span className="text-sm font-normal text-gray-900">
+            <span
+              className="text-[18px] font-semibold text-gray-900"
+              style={{ fontFamily: 'Rubik, sans-serif' }}
+            >
               {t('translate.translateTo', { defaultValue: 'Translate to' })}
             </span>
             {/* TODO: make target language dynamic */}
             <span className="text-orange-500">Italiano</span>
           </div>
-
-          {/* Removed tries button from header */}
         </div>
       </div>
 
       {/* Side-by-side Translation Text Areas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Original Content */}
-        <div className="bg-white rounded-lg p-4 min-h-[200px]">
+        <div
+          className="bg-white rounded-lg p-4 min-h-[200px]"
+          style={{ border: '1px solid #CCCCCC' }}
+        >
           <div className="text-sm leading-relaxed text-gray-900 whitespace-pre-line">
             {originalContent || ''}
           </div>
         </div>
 
         {/* Translated Content */}
-        <div className="bg-white rounded-lg p-4 min-h-[200px]">
+        <div
+          className="bg-white rounded-lg p-4 min-h-[200px]"
+          style={{ border: '1px solid #CCCCCC' }}
+        >
           <textarea
             value={translatedContent}
             onChange={(e) => onTranslationChange(e.target.value)}
             placeholder={t('translate.enterTranslation', {
               defaultValue: 'Enter your translation here...',
             })}
-            className="w-full h-full min-h-[160px] border-0 resize-none focus:outline-none text-sm leading-relaxed bg-transparent text-gray-900"
+            className="w-full h-full min-h-[160px] border-0 resize-none focus:outline-none text-sm leading-relaxed bg-transparent text-gray-900 textarea-scrollbar"
+            style={{ width: 'calc(100% + 18px)', marginRight: '-18px' }}
           />
         </div>
       </div>
