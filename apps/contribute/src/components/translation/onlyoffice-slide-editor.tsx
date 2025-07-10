@@ -305,7 +305,7 @@ export const OnlyOfficeSlideEditor = forwardRef<
                 toolbarHideFileName: false,
                 toolbarNoTabs: false,
                 unit: 'cm',
-                zoom: 100,
+                zoom: -1,
                 features: {
                   spellcheck: true,
                 },
