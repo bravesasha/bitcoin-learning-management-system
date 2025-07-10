@@ -72,7 +72,7 @@ export const createS3Service = (config: S3Config): S3Service => {
     return s3.send(new GetObjectCommand({ Bucket, Key: base(key) }));
   };
 
-  const head = (key: string) => {
+  const headObject = (key: string) => {
     return s3.send(new HeadObjectCommand({ Bucket, Key: base(key) }));
   };
 
@@ -150,7 +150,7 @@ export const createS3Service = (config: S3Config): S3Service => {
     },
     // Return the metadata of the requested file
     head(key: string) {
-      return head(key).then((res) => ({
+      return headObject(key).then((res) => ({
         lastModified: res.LastModified,
         contentLength: res.ContentLength,
         contentType: res.ContentType,
@@ -165,7 +165,7 @@ export const createS3Service = (config: S3Config): S3Service => {
     },
     // Return the metadata of the requested file
     metadata(key: string) {
-      return head(key)
+      return headObject(key)
         .then((res) => res.Metadata ?? null)
         .catch(() => null);
     },

@@ -20,7 +20,7 @@ const getSessionConfig = (config: SessionConfig) => {
       httpOnly: true,
       path: '/',
       secure: config.secure,
-      sameSite: 'strict' as const,
+      sameSite: config.secure ? 'strict' : 'lax', // Use lax in development for cross-port requests
     },
   };
 };

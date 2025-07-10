@@ -1,7 +1,7 @@
 import { TranslationStatus } from '@blms/constants';
 import { Button } from '@blms/ui';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import BookClosedIcon from '#src/assets/icons/book_closed.svg';
@@ -13,7 +13,10 @@ import OrangePill from '#src/assets/icons/orange_pill_color.svg';
 
 import { PageLayout } from '#src/components/page-layout.tsx';
 import { AudioPlayer } from '#src/components/translation/audio-player.tsx';
-import { OnlyOfficeSlideEditor } from '#src/components/translation/onlyoffice-slide-editor.tsx';
+import {
+  OnlyOfficeSlideEditor,
+  type OnlyOfficeSlideEditorRef,
+} from '#src/components/translation/onlyoffice-slide-editor.tsx';
 import { PptLinkSection } from '#src/components/translation/ppt-link.tsx';
 import { TranscriptionEditor } from '#src/components/translation/transcription-editor.tsx';
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
@@ -89,6 +92,9 @@ function ChapterTranslationPage() {
   // Video generation modal state
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoGenerationProgress, setVideoGenerationProgress] = useState(0);
+
+  // OnlyOffice editor ref for manual saving
+  const onlyOfficeEditorRef = useRef<OnlyOfficeSlideEditorRef>(null);
 
   // Get target language - for now, default to French
   const targetLanguage = 'fr';
@@ -297,13 +303,25 @@ function ChapterTranslationPage() {
 
   const handleValidatePresentation = async () => {
     console.log('Validate presentation clicked');
-    setValidationStates((prev) => ({ ...prev, presentationValidated: true }));
 
     if (!chapterData) return;
     const currentSlide = chapterData.slides[currentSlideIndex];
     if (!currentSlide) return;
 
     try {
+      console.log('Starting presentation validation process...');
+
+      // First, save the current document using OnlyOffice
+      if (onlyOfficeEditorRef.current) {
+        console.log('Triggering OnlyOffice save...');
+        await onlyOfficeEditorRef.current.saveDocument();
+        console.log('OnlyOffice save completed');
+      } else {
+        console.warn('OnlyOffice editor ref not available');
+      }
+
+      // Then update the validation state in the database
+      console.log('Updating database validation state...');
       await trpcClient.content.updateCourseTranslationSlide.mutate({
         courseId,
         language: targetLanguage,
@@ -311,8 +329,40 @@ function ChapterTranslationPage() {
         slideId: currentSlide.slideId,
         pptValidated: true,
       } as any);
+
+      // Update local state
+      setValidationStates((prev) => ({ ...prev, presentationValidated: true }));
+      console.log('Presentation validation completed successfully');
     } catch (error) {
       console.error('Error validating presentation:', error);
+    }
+  };
+
+  // Handle document modification (auto-uncheck validation)
+  const handleDocumentModified = async () => {
+    console.log('Document modified - unchecking validation');
+
+    if (!chapterData) return;
+    const currentSlide = chapterData.slides[currentSlideIndex];
+    if (!currentSlide) return;
+
+    try {
+      // Update database to mark as unvalidated
+      await trpcClient.content.updateCourseTranslationSlide.mutate({
+        courseId,
+        language: targetLanguage,
+        chapterId,
+        slideId: currentSlide.slideId,
+        pptValidated: false,
+      } as any);
+
+      // Update local state
+      setValidationStates((prev) => ({
+        ...prev,
+        presentationValidated: false,
+      }));
+    } catch (error) {
+      console.error('Error updating validation state:', error);
     }
   };
 
@@ -820,19 +870,24 @@ function ChapterTranslationPage() {
             </h4>
             <p className="text-sm text-gray-600">
               Edit the slide with ONLYOFFICE for full-fidelity PowerPoint
-              editing. Changes are saved automatically when you click the save
-              icon inside the editor.
+              editing. Click "Validate Presentation" below to save your changes
+              to the server.
             </p>
           </div>
 
           <div className="mb-6">
             <OnlyOfficeSlideEditor
+              ref={onlyOfficeEditorRef}
               fileUrl={
                 currentSlide?.slideId
                   ? `/api/translation-downloads/pptx/${courseId}/${currentSlide.slideId}/${targetLanguage}`
                   : null
               }
               className="w-full"
+              onDocumentModified={handleDocumentModified}
+              courseId={courseId}
+              slideId={currentSlide?.slideId}
+              language={targetLanguage}
             />
           </div>
 

@@ -95,7 +95,7 @@ export const session: SessionConfig = {
   secret: getenv('SESSION_SECRET', 'super secret'),
   maxAge: getenv('SESSION_MAX_AGE', 1000 * 60 * 60 * 24 * 7), // 1 week
   secure: production,
-  domain: production ? domain : undefined,
+  domain: production ? domain : 'localhost', // Set to localhost for development to work across ports
 };
 
 export const stripe: StripeConfig = {
