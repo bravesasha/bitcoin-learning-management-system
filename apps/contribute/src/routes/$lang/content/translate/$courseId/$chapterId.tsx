@@ -82,6 +82,17 @@ function ChapterTranslationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Base file name (e.g. 1.1_0) used for PPTX/Audio resources – must be computed on every render
+  const fileBaseName = React.useMemo(() => {
+    if (!chapterData) return '';
+    const partIdx = chapterData.context.partIndex;
+    const chapIdx = chapterData.context.chapterIndex;
+    const slide = chapterData.slides?.[currentSlideIndex];
+    if (!slide) return '';
+    const slideIdx = slide.slideNumber ?? currentSlideIndex; // slide index is already 0-based in storage
+    return `${partIdx}.${chapIdx}_${slideIdx}`;
+  }, [chapterData, currentSlideIndex]);
+
   // Track validation states for the current slide
   const [validationStates, setValidationStates] = useState({
     presentationValidated: false,
@@ -879,21 +890,27 @@ function ChapterTranslationPage() {
             <OnlyOfficeSlideEditor
               ref={onlyOfficeEditorRef}
               fileUrl={
-                currentSlide?.slideId
-                  ? `/api/translation-downloads/pptx/${courseId}/${currentSlide.slideId}/${targetLanguage}`
+                currentSlide
+                  ? `/api/translation-downloads/pptx/${courseId}/${targetLanguage}/${currentSlide.partId}/${chapterId}/${currentSlide.slideId}/${fileBaseName}`
                   : null
               }
               className="w-full"
               onDocumentModified={handleDocumentModified}
               courseId={courseId}
+              partId={currentSlide?.partId}
+              chapterId={chapterId}
               slideId={currentSlide?.slideId}
+              fileName={fileBaseName}
               language={targetLanguage}
             />
           </div>
 
           <PptLinkSection
             courseId={courseId}
+            partId={currentSlide?.partId ?? ''}
+            chapterId={chapterId}
             slideId={currentSlide?.slideId ?? ''}
+            fileName={fileBaseName}
             language={targetLanguage}
             onValidate={handleValidatePresentation}
             validated={validationStates.presentationValidated}
@@ -931,7 +948,10 @@ function ChapterTranslationPage() {
 
         <AudioPlayer
           courseId={courseId}
+          partId={currentSlide?.partId ?? ''}
+          chapterId={chapterId}
           slideId={currentSlide?.slideId ?? ''}
+          fileName={fileBaseName}
           language={targetLanguage}
           validated={validationStates.audioValidated}
           onValidate={handleValidateAudio}

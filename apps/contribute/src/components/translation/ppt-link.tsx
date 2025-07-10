@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react';
 
 interface PptLinkProps {
   courseId: string;
+  partId: string;
+  chapterId: string;
   slideId: string;
+  fileName: string;
   language: string;
   onValidate: () => void;
   validated: boolean;
@@ -13,15 +16,22 @@ interface PptLinkProps {
 // Build the API URL that proxies the PPTX through the backend instead of exposing the raw S3 bucket.
 const buildPptxApiUrl = (
   courseId: string,
+  partId: string,
+  chapterId: string,
   slideId: string,
+  fileName: string,
   lang: string,
 ): string => {
-  return `/api/translation-downloads/pptx/${courseId}/${slideId}/${lang}`;
+  // New schema: /api/translation-downloads/pptx/<courseId>/<lang>/<partId>/<chapterId>/<slideId>/<fileName>`
+  return `/api/translation-downloads/pptx/${courseId}/${lang}/${partId}/${chapterId}/${slideId}/${fileName}`;
 };
 
 export const PptLinkSection: React.FC<PptLinkProps> = ({
   courseId,
+  partId,
+  chapterId,
   slideId,
+  fileName,
   language,
   onValidate,
   validated,
@@ -29,7 +39,14 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
 }) => {
   const [exists, setExists] = useState<boolean | null>(null);
 
-  const url = buildPptxApiUrl(courseId, slideId, language);
+  const url = buildPptxApiUrl(
+    courseId,
+    partId,
+    chapterId,
+    slideId,
+    fileName,
+    language,
+  );
 
   useEffect(() => {
     let cancelled = false;

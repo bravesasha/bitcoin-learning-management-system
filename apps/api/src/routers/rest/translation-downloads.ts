@@ -14,6 +14,9 @@ const downloadTokens = new Map<
     courseId: string;
     slideId: string;
     language: string;
+    partId: string;
+    chapterId: string;
+    fileName: string;
     expires: number;
     userId: string;
   }
@@ -43,10 +46,26 @@ export const createRestTranslationDownloadRoutes = async (
     expressAuthMiddleware,
     async (req, res, next) => {
       try {
-        const { documentKey, courseId, slideId, language } = req.body;
+        const {
+          documentKey,
+          courseId,
+          slideId,
+          language,
+          partId,
+          chapterId,
+          fileName,
+        } = req.body;
         const userId = req.session.uid;
 
-        if (!documentKey || !courseId || !slideId || !language) {
+        if (
+          !documentKey ||
+          !courseId ||
+          !slideId ||
+          !language ||
+          !partId ||
+          !chapterId ||
+          !fileName
+        ) {
           throw new BadRequest('Missing required parameters');
         }
 
@@ -56,15 +75,25 @@ export const createRestTranslationDownloadRoutes = async (
 
         console.log('Proxying forcesave command for:', {
           courseId,
+          partId,
+          chapterId,
           slideId,
           language,
+          fileName,
         });
 
         // Send forcesave command to OnlyOffice command service
         const commandBody = {
           c: 'forcesave',
           key: documentKey,
-          userdata: JSON.stringify({ courseId, slideId, language }),
+          userdata: JSON.stringify({
+            courseId,
+            partId,
+            chapterId,
+            slideId,
+            language,
+            fileName,
+          }),
         };
 
         // Use localhost in development (hybrid environment) or onlyoffice in Docker
@@ -99,10 +128,19 @@ export const createRestTranslationDownloadRoutes = async (
         console.log('OnlyOffice callback received:', req.body);
 
         const { status, key, url } = req.body;
-        const { courseId, slideId, language } = req.query;
+        const { courseId, partId, chapterId, slideId, language, fileName } =
+          req.query as any;
 
         // Handle forcesave operations (status 6 = forcesave)
-        if (status === 6 && courseId && slideId && language) {
+        if (
+          status === 6 &&
+          courseId &&
+          partId &&
+          chapterId &&
+          slideId &&
+          language &&
+          fileName
+        ) {
           console.log(
             `OnlyOffice callback: Forcesave requested for ${courseId}/${slideId}/${language}`,
           );
@@ -120,7 +158,7 @@ export const createRestTranslationDownloadRoutes = async (
             const documentStream = Readable.from(Buffer.from(documentBuffer));
 
             // Save to S3, replacing the existing file
-            const s3Key = `contribute-detailed/${courseId}/${slideId}/${language}/pptx/${slideId}.pptx`;
+            const s3Key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
 
             await dependencies.s3.upload(s3Key, documentStream, {
               contentType:
@@ -145,17 +183,26 @@ export const createRestTranslationDownloadRoutes = async (
 
   // Public endpoint for OnlyOffice to download PPTX files (no auth required)
   router.get(
-    '/translation-downloads/pptx-public/:courseId/:slideId/:language',
+    '/translation-downloads/pptx-public/:courseId/:language/:partId/:chapterId/:slideId/:fileName',
     async (req, res, next) => {
       try {
-        const { courseId, slideId, language } = req.params;
+        const { courseId, language, partId, chapterId, slideId, fileName } =
+          req.params as any;
 
-        if (!courseId || !slideId || !language) {
-          throw new BadRequest('Missing courseId, slideId or language');
+        if (
+          !courseId ||
+          !language ||
+          !partId ||
+          !chapterId ||
+          !slideId ||
+          !fileName
+        ) {
+          throw new BadRequest('Missing required path parameters');
         }
 
-        // Path format used by the contribute front-end for generated pptx files
-        const key = `contribute-detailed/${courseId}/${slideId}/${language}/pptx/${slideId}.pptx`;
+        // New path format
+        // <courseId>/<language>/<partId>/<chapterId>/<slideId>/pptx/<slideId>.pptx
+        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
 
         // Try head for headers
         const head = await dependencies.s3.head(key).catch(() => null);
@@ -202,11 +249,21 @@ export const createRestTranslationDownloadRoutes = async (
     expressAuthMiddleware,
     async (req, res, next) => {
       try {
-        const { courseId, slideId, language } = req.body;
+        const { courseId, slideId, language, partId, chapterId, fileName } =
+          req.body;
         const userId = req.session.uid;
 
-        if (!courseId || !slideId || !language) {
-          throw new BadRequest('Missing courseId, slideId or language');
+        if (
+          !courseId ||
+          !slideId ||
+          !language ||
+          !partId ||
+          !chapterId ||
+          !fileName
+        ) {
+          throw new BadRequest(
+            'Missing courseId, partId, chapterId, slideId, language or fileName',
+          );
         }
 
         if (!userId) {
@@ -221,9 +278,12 @@ export const createRestTranslationDownloadRoutes = async (
           courseId,
           slideId,
           language,
+          partId,
+          chapterId,
+          fileName,
           expires,
           userId,
-        });
+        } as any);
 
         // Return the temporary download URL
         const downloadUrl = `${req.protocol}://${req.get('host')}/api/translation-downloads/pptx-direct/${token}`;
@@ -261,10 +321,11 @@ export const createRestTranslationDownloadRoutes = async (
           return;
         }
 
-        const { courseId, slideId, language } = tokenData;
+        const { courseId, slideId, language, partId, chapterId, fileName } =
+          tokenData as any;
 
         // Path format used by the contribute front-end for generated pptx files
-        const key = `contribute-detailed/${courseId}/${slideId}/${language}/pptx/${slideId}.pptx`;
+        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
 
         // Try head for headers
         const head = await dependencies.s3.head(key).catch(() => null);
@@ -301,20 +362,28 @@ export const createRestTranslationDownloadRoutes = async (
   );
 
   router.get(
-    '/translation-downloads/audio/:courseId/:slideId/:language',
+    '/translation-downloads/audio/:courseId/:language/:partId/:chapterId/:slideId/:fileName',
     expressAuthMiddleware,
     async (req, res, next) => {
       try {
-        const { courseId, slideId, language } = req.params;
+        const { courseId, language, partId, chapterId, slideId, fileName } =
+          req.params as any;
 
-        if (!courseId || !slideId || !language) {
-          throw new BadRequest('Missing courseId, slideId or language');
+        if (
+          !courseId ||
+          !language ||
+          !partId ||
+          !chapterId ||
+          !slideId ||
+          !fileName
+        ) {
+          throw new BadRequest('Missing required path parameters');
         }
 
         // We support either .mp3 (preferred) or legacy .m4a encodings
-        // <courseId>/<slideId>/<lang>/audio/<slideId>.(mp3|m4a)
+        // <courseId>/<language>/<partId>/<chapterId>/<slideId>/audio/<slideId>.(mp3|m4a)
         const buildKey = (ext: 'mp3' | 'm4a') =>
-          `contribute-detailed/${courseId}/${slideId}/${language}/audio/${slideId}.${ext}`;
+          `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/audio/${fileName}.${ext}`;
 
         let key = buildKey('mp3');
         let head = await dependencies.s3.head(key).catch(() => null);
@@ -409,7 +478,7 @@ export const createRestTranslationDownloadRoutes = async (
 
   // Handle CORS preflight requests for PPTX downloads
   router.options(
-    '/translation-downloads/pptx/:courseId/:slideId/:language',
+    '/translation-downloads/pptx/:courseId/:language/:partId/:chapterId/:slideId/:fileName',
     (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -483,19 +552,27 @@ export const createRestTranslationDownloadRoutes = async (
 
   // Stream translated PPTX files stored in S3 to the client
   router.get(
-    '/translation-downloads/pptx/:courseId/:slideId/:language',
+    '/translation-downloads/pptx/:courseId/:language/:partId/:chapterId/:slideId/:fileName',
     expressAuthMiddleware,
     async (req, res, next) => {
       try {
-        const { courseId, slideId, language } = req.params;
+        const { courseId, language, partId, chapterId, slideId, fileName } =
+          req.params as any;
 
-        if (!courseId || !slideId || !language) {
-          throw new BadRequest('Missing courseId, slideId or language');
+        if (
+          !courseId ||
+          !language ||
+          !partId ||
+          !chapterId ||
+          !slideId ||
+          !fileName
+        ) {
+          throw new BadRequest('Missing required path parameters');
         }
 
-        // Path format used by the contribute front-end for generated pptx files
-        // <courseId>/<slideId>/<lang>/pptx/<slideId>.pptx
-        const key = `contribute-detailed/${courseId}/${slideId}/${language}/pptx/${slideId}.pptx`;
+        // New path format
+        // <courseId>/<language>/<partId>/<chapterId>/<slideId>/pptx/<slideId>.pptx
+        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
 
         // Try head for headers
         const head = await dependencies.s3.head(key).catch(() => null);

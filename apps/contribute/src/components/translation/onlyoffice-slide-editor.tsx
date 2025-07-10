@@ -15,8 +15,14 @@ interface OnlyOfficeSlideEditorProps {
   onDocumentModified?: () => void;
   /** Course ID for manual saving */
   courseId?: string;
+  /** Part ID for manual saving */
+  partId?: string;
+  /** Chapter ID for manual saving */
+  chapterId?: string;
   /** Slide ID for manual saving */
   slideId?: string;
+  /** Base file name (e.g., 1.1_0) without extension */
+  fileName?: string;
   /** Language for manual saving */
   language?: string;
 }
@@ -37,17 +43,37 @@ export const OnlyOfficeSlideEditor = forwardRef<
   OnlyOfficeSlideEditorProps
 >(
   (
-    { fileUrl, className, onDocumentModified, courseId, slideId, language },
+    {
+      fileUrl,
+      className,
+      onDocumentModified,
+      courseId,
+      partId,
+      chapterId,
+      slideId,
+      language,
+      fileName,
+    },
     ref,
   ) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const editorInstanceRef = useRef<any>(null);
+    // Store the generated document key so we can reuse it when triggering forcesave
+    const documentKeyRef = useRef<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     // Expose saveDocument method to parent component
     useImperativeHandle(ref, () => ({
       saveDocument: async () => {
-        if (!editorInstanceRef.current || !courseId || !slideId || !language) {
+        if (
+          !editorInstanceRef.current ||
+          !courseId ||
+          !partId ||
+          !chapterId ||
+          !slideId ||
+          !language ||
+          !fileName
+        ) {
           console.error(
             'Editor not initialized or missing required parameters',
           );
@@ -65,14 +91,23 @@ export const OnlyOfficeSlideEditor = forwardRef<
           setIsSaving(true);
 
           // Use our API proxy to trigger OnlyOffice forcesave (avoids CORS issues)
-          const documentKey = btoa(fileUrl!).replace(/[^a-zA-Z0-9]/g, '');
+          const documentKey = documentKeyRef.current;
+          if (!documentKey) {
+            console.error(
+              'Document key not available – editor may not have initialised yet',
+            );
+            return;
+          }
           const commandUrl = '/api/translation-downloads/pptx-forcesave';
 
           const commandBody = {
             documentKey,
             courseId,
+            partId,
+            chapterId,
             slideId,
             language,
+            fileName,
           };
 
           console.log('Sending forcesave command via proxy:', commandBody);
@@ -115,27 +150,77 @@ export const OnlyOfficeSlideEditor = forwardRef<
         return;
       }
 
-      // Generate a temporary public download URL for OnlyOffice
+      // Generate a short-lived download URL for OnlyOffice via token endpoint
       const initializeEditor = async () => {
         try {
-          // Extract courseId, slideId, language from fileUrl
-          // fileUrl format: /api/translation-downloads/pptx/courseId/slideId/language
-          const urlParts = fileUrl.split('/');
-          const courseId = urlParts[4]; // Fixed: courseId is at index 4
-          const slideId = urlParts[5]; // Fixed: slideId is at index 5
-          const language = urlParts[6]; // Fixed: language is at index 6
+          if (
+            !courseId ||
+            !partId ||
+            !chapterId ||
+            !slideId ||
+            !language ||
+            !fileName
+          ) {
+            console.error(
+              'Missing path parameters for OnlyOffice initialization',
+            );
+            return;
+          }
 
-          // Use a public endpoint that OnlyOffice can access without authentication
-          // In hybrid dev: OnlyOffice (Docker) → API (host) via host.docker.internal
-          // In production: OnlyOffice (Docker) → API (Docker) via service name
-          const isHybridDev = window.location.hostname === 'localhost';
+          // Determine API host for callback URLs inside the OnlyOffice container
+          //  - For the browser we can safely rely on a relative path for the token request
+          //  - For the OnlyOffice callback we still need a host reachable from the container
+          const isHybridDev =
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1';
           const apiHost = isHybridDev
             ? 'host.docker.internal:3000'
             : 'api:3000';
-          const absoluteFileUrl = `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-public/${courseId}/${slideId}/${language}`;
+
+          // Request a short download token (reduces URL length) – call the API through the same
+          // origin as the frontend to avoid DNS resolution issues in the browser.
+          const tokenResp = await fetch(
+            '/api/translation-downloads/pptx-token',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                courseId,
+                partId,
+                chapterId,
+                slideId,
+                language,
+                fileName,
+              }),
+            },
+          );
+
+          if (!tokenResp.ok) {
+            console.error('Failed to obtain OnlyOffice download token');
+            return;
+          }
+
+          const { downloadUrl } = await tokenResp.json();
+
+          // Ensure the download URL is reachable from inside the OnlyOffice container.
+          // When the frontend runs on localhost the API host seen by the container should be
+          // `host.docker.internal` (macOS/Windows) or the docker-compose service name `api`.
+          // We already computed `apiHost` based on the running environment.
+
+          let absoluteFileUrl: string = downloadUrl as string;
+          if (isHybridDev) {
+            // Replace "localhost:3000" (or 127.0.0.1) with a host resolvable inside Docker
+            absoluteFileUrl = absoluteFileUrl
+              .replace('localhost:3000', apiHost)
+              .replace('127.0.0.1:3000', apiHost);
+          }
 
           // Generate a unique document key (OnlyOffice uses this for document identification)
-          const documentKey = btoa(fileUrl).replace(/[^a-zA-Z0-9]/g, '');
+          const documentKey = btoa(absoluteFileUrl).replace(
+            /[^a-zA-Z0-9]/g,
+            '',
+          );
+          documentKeyRef.current = documentKey;
 
           // OnlyOffice configuration
           const config: any = {
@@ -171,9 +256,12 @@ export const OnlyOfficeSlideEditor = forwardRef<
               lang: 'en',
               // Add callback URL for manual saves
               ...(courseId &&
+                partId &&
+                chapterId &&
                 slideId &&
-                language && {
-                  callbackUrl: `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-callback?courseId=${courseId}&slideId=${slideId}&language=${language}`,
+                language &&
+                fileName && {
+                  callbackUrl: `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-callback?courseId=${courseId}&partId=${partId}&chapterId=${chapterId}&slideId=${slideId}&language=${language}&fileName=${fileName}`,
                 }),
               coEditing: {
                 mode: 'fast',
@@ -326,7 +414,7 @@ export const OnlyOfficeSlideEditor = forwardRef<
           editorRef.current.innerHTML = '';
         }
       };
-    }, [fileUrl]);
+    }, [fileUrl, courseId, partId, chapterId, slideId, language, fileName]);
 
     if (!fileUrl) {
       return <div className={className}>No slide selected…</div>;
