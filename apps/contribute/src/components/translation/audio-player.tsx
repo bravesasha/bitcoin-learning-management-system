@@ -22,6 +22,8 @@ interface AudioPlayerProps {
   language: string;
   onValidate: () => void;
   validated: boolean;
+  generating?: boolean;
+  version?: number;
 }
 
 // Build the API URL that proxies the audio through the backend instead of exposing the raw S3 bucket.
@@ -32,9 +34,11 @@ const buildAudioApiUrl = (
   slideId: string,
   fileName: string,
   lang: string,
+  version?: number,
 ): string => {
   // New schema: /api/translation-downloads/audio/<courseId>/<lang>/<partId>/<chapterId>/<slideId>/<fileName>`
-  return `/api/translation-downloads/audio/${courseId}/${lang}/${partId}/${chapterId}/${slideId}/${fileName}`;
+  const base = `/api/translation-downloads/audio/${courseId}/${lang}/${partId}/${chapterId}/${slideId}/${fileName}`;
+  return version ? `${base}?v=${version}` : base;
 };
 
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({
@@ -46,6 +50,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   language,
   onValidate,
   validated,
+  generating = false,
+  version = 0,
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [exists, setExists] = useState<boolean | null>(null);
@@ -109,6 +115,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     slideId,
     fileName,
     language,
+    version,
   );
 
   // Fetch & decode audio ONCE to build a high-resolution amplitude array.
@@ -173,6 +180,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Probe file existence
   useEffect(() => {
+    if (generating) {
+      setExists(null);
+      return; // wait until generation finished
+    }
     let cancelled = false;
     setExists(null);
 
@@ -183,7 +194,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [url]);
+  }, [url, generating]);
 
   // Load audio when exists
   useEffect(() => {
@@ -303,8 +314,15 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 px-[10px] mt-10">
+      {generating && (
+        <p className="text-sm text-gray-500 mb-2">
+          {t('translate.generatingAudio', {
+            defaultValue: 'Generating audio…',
+          })}
+        </p>
+      )}
       {/* Status messages */}
-      {exists === null && (
+      {exists === null && !generating && (
         <p className="text-sm text-gray-500 mb-2">
           {t('translate.checkingResource', {
             defaultValue: 'Checking audio resource…',

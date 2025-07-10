@@ -13,6 +13,8 @@ interface TranscriptionEditorProps {
   transcriptionValidated: boolean;
   /** Optional: display the tries remaining e.g. "Limit 2/3 tries" */
   triesLabel?: string;
+  /** Disable Generate Audio button when tries exhausted */
+  generateDisabled?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   onValidateTranscription,
   transcriptionValidated,
   triesLabel = 'Limit 2/3 tries',
+  generateDisabled = false,
 }) => {
   const { t } = useTranslation();
 
@@ -116,15 +119,12 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             onClick={onGenerateAudio}
             size="m"
             variant="primary"
-            className="shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-[18px] leading-[18px] font-medium"
+            disabled={generateDisabled || !transcriptionValidated}
+            className={`shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-[18px] leading-[18px] font-medium ${generateDisabled || !transcriptionValidated ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             {t('translate.generateAudio', { defaultValue: 'Generate audio' })}
           </Button>
-          <span className="text-orange-600 text-sm">
-            {t('translate.limitTries', {
-              defaultValue: 'Limite 2/3 essais',
-            })}
-          </span>
+          <span className="text-orange-600 text-sm">{triesLabel}</span>
         </div>
         <button
           type="button"

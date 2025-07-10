@@ -100,6 +100,30 @@ function ChapterTranslationPage() {
     audioValidated: false,
   });
 
+  // -----------------------------
+  // Audio generation attempts per slide (max 3)
+  // -----------------------------
+  const MAX_AUDIO_TRIES = 3;
+
+  const getAttemptKey = (slideId: string) =>
+    `audioAttempts_${courseId}_${chapterId}_${slideId}`;
+
+  const [audioAttempts, setAudioAttempts] = useState<number>(0);
+  const [audioGenerating, setAudioGenerating] = useState(false);
+  const [audioVersion, setAudioVersion] = useState(0);
+
+  // Load attempts whenever slide changes
+  useEffect(() => {
+    if (!chapterData) return;
+    const slide = chapterData.slides[currentSlideIndex];
+    if (!slide) return;
+
+    const saved = Number(
+      sessionStorage.getItem(getAttemptKey(slide.slideId)) ?? '0',
+    );
+    setAudioAttempts(Number.isFinite(saved) ? saved : 0);
+  }, [chapterData, currentSlideIndex]);
+
   // Video generation modal state
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoGenerationProgress, setVideoGenerationProgress] = useState(0);
@@ -377,9 +401,106 @@ function ChapterTranslationPage() {
     }
   };
 
-  const handleGenerateAudio = () => {
+  const handleGenerateAudio = async () => {
+    if (audioAttempts >= MAX_AUDIO_TRIES) return;
+
     console.log('Generate audio clicked');
-    // TODO: Implement audio generation
+
+    if (!chapterData) return;
+    const currentSlide = chapterData.slides[currentSlideIndex];
+    if (!currentSlide) return;
+
+    try {
+      const response = await fetch('/api/translation-audio/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          courseId,
+          partId: currentSlide.partId,
+          chapterId,
+          slideId: currentSlide.slideId,
+          fileName: fileBaseName,
+          language: targetLanguage,
+          text: currentSlide.translatedContent || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to start audio generation');
+      }
+
+      const data = await response.json();
+      console.log('Audio generation task started:', data);
+
+      // Mark audio as unvalidated in DB immediately
+      try {
+        await trpcClient.content.updateCourseTranslationSlide.mutate({
+          courseId,
+          language: targetLanguage,
+          chapterId,
+          slideId: currentSlide.slideId,
+          audioValidated: false,
+        } as any);
+      } catch (err) {
+        console.warn('Failed to mark audio unvalidated', err);
+      }
+
+      const toolkitTaskId = data.toolkitTask?.task_id;
+
+      // Increment attempt count & persist
+      const newAttempts = audioAttempts + 1;
+      setAudioAttempts(newAttempts);
+      sessionStorage.setItem(
+        getAttemptKey(currentSlide.slideId),
+        String(newAttempts),
+      );
+
+      // Start polling Language-Toolkit status if task_id present
+      if (toolkitTaskId) {
+        setAudioGenerating(true);
+
+        const pollStart = Date.now();
+
+        const poll = async () => {
+          try {
+            const statResp = await fetch(
+              `/api/translation-audio/tasks/${toolkitTaskId}`,
+              {
+                credentials: 'include',
+              },
+            );
+            if (!statResp.ok) throw new Error('Status fetch failed');
+            const stat = await statResp.json();
+
+            if (stat.status === 'completed') {
+              setAudioGenerating(false);
+              setAudioVersion(Date.now()); // bust cache
+              return; // stop polling
+            }
+          } catch (err) {
+            console.error('Polling error', err);
+          }
+
+          if (Date.now() - pollStart < 2 * 60 * 1000) {
+            setTimeout(poll, 3000);
+          } else {
+            setAudioGenerating(false);
+            console.warn('Audio generation timeout');
+          }
+        };
+
+        setTimeout(poll, 3000);
+      }
+
+      // Optimistically reset validation until user reviews the new audio
+      setValidationStates((prev) => ({ ...prev, audioValidated: false }));
+    } catch (error) {
+      console.error('Error generating audio:', error);
+    }
   };
 
   const handleValidateTranscription = async () => {
@@ -872,19 +993,7 @@ function ChapterTranslationPage() {
             marginTop: '40px',
           }}
         >
-          <div className="mb-5">
-            <span className="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-600 rounded">
-              NEW
-            </span>
-            <h4 className="text-lg font-semibold text-gray-900 mt-2">
-              ONLYOFFICE Presentation Editor
-            </h4>
-            <p className="text-sm text-gray-600">
-              Edit the slide with ONLYOFFICE for full-fidelity PowerPoint
-              editing. Click "Validate Presentation" below to save your changes
-              to the server.
-            </p>
-          </div>
+          {/* OnlyOffice header removed per UI request */}
 
           <div className="mb-6">
             <OnlyOfficeSlideEditor
@@ -944,6 +1053,12 @@ function ChapterTranslationPage() {
           onGenerateAudio={handleGenerateAudio}
           onValidateTranscription={handleValidateTranscription}
           transcriptionValidated={validationStates.transcriptionValidated}
+          generateDisabled={audioAttempts >= MAX_AUDIO_TRIES}
+          triesLabel={
+            audioAttempts >= MAX_AUDIO_TRIES
+              ? 'You have no more tries'
+              : `Limit ${audioAttempts}/${MAX_AUDIO_TRIES} tries`
+          }
         />
 
         <AudioPlayer
@@ -955,6 +1070,8 @@ function ChapterTranslationPage() {
           language={targetLanguage}
           validated={validationStates.audioValidated}
           onValidate={handleValidateAudio}
+          generating={audioGenerating}
+          version={audioVersion}
         />
       </div>
 
