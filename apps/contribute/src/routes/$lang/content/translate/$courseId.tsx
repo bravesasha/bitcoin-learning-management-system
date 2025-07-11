@@ -49,14 +49,25 @@ function ProofreadCoursePage() {
   const chapterId = 'chapterId' in params ? params.chapterId : undefined;
   const isOnChapterRoute = Boolean(chapterId);
 
-  // Calculate real progress from chapter progress data
+  // Calculate progress using slide counts for more granular accuracy
   const totalChapters = chapterProgress.length;
   const completedChapters = chapterProgress.filter(
     (ch) => ch.status === 'completed',
   ).length;
+
+  const totalStepsInCourse = chapterProgress.reduce(
+    (sum, ch) => sum + ((ch as any).totalSteps ?? (ch.totalSlides || 0) * 3),
+    0,
+  );
+  const completedStepsInCourse = chapterProgress.reduce(
+    (sum, ch) =>
+      sum + ((ch as any).validatedSteps ?? (ch.completedSlides || 0) * 3),
+    0,
+  );
+
   const progressPercentage =
-    totalChapters > 0
-      ? Math.round((completedChapters / totalChapters) * 100)
+    totalStepsInCourse > 0
+      ? Math.round((completedStepsInCourse / totalStepsInCourse) * 100)
       : 0;
 
   // ALL useEffect hooks must be called every render
@@ -103,7 +114,7 @@ function ProofreadCoursePage() {
     };
 
     fetchCourseData();
-  }, [courseId, i18n.language, isOnChapterRoute]);
+  }, [courseId, isOnChapterRoute]);
 
   // ALL function definitions must be defined every render
   const getStatusText = (status: string) => {
@@ -159,7 +170,18 @@ function ProofreadCoursePage() {
             chapterIndex: chapter?.chapterIndex || 0,
             chapterTitle: chapter?.title || `Chapter ${chapter?.chapterIndex}`,
             status: progressData?.status || 'not-started',
-          };
+            // Validation-step progress information for granular percentage display
+            totalSteps:
+              (progressData as any)?.totalSteps ??
+              (progressData?.totalSlides ?? 0) * 3,
+            validatedSteps:
+              (progressData as any)?.validatedSteps ??
+              (progressData?.completedSlides ?? 0) * 3,
+            totalSlides: progressData?.totalSlides ?? 0,
+            completedSlides: progressData?.completedSlides ?? 0,
+            inProgressSlides: progressData?.inProgressSlides ?? 0,
+            todoSlides: progressData?.todoSlides ?? 0,
+          } as any; // Cast to allow additional fields beyond CourseChapterDetails
         }) || [],
     })) || [];
 
@@ -352,6 +374,11 @@ function ProofreadCoursePage() {
               noChapters: t('translate.noCoursePartsFound', {
                 defaultValue: 'No course parts found for proofreading',
               }),
+              proofreadText: t('translate.proofread', {
+                defaultValue: 'Proofread',
+              }),
+              resumeText: t('translate.resume', { defaultValue: 'Resume' }),
+              reviewText: t('translate.review', { defaultValue: 'Review' }),
             }}
             className="mt-6"
           />

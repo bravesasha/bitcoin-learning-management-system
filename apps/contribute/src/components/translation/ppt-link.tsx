@@ -112,6 +112,9 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
           </div>
           <span className="text-gray-900 font-medium">
             Validate presentation PPT
+            <span className="ml-1 font-medium" style={{ color: '#ef4444' }}>
+              *
+            </span>
           </span>
         </button>
       </div>
