@@ -611,23 +611,95 @@ function ChapterTranslationPage() {
   };
 
   const handleCreateVideo = async () => {
-    console.log('Create video clicked');
     setIsVideoModalOpen(true);
     setVideoGenerationProgress(0);
 
-    // Simulate video generation progress
-    simulateVideoGeneration();
+    try {
+      const resp = await trpcClient.content.generateCourseVideo.mutate({
+        courseId,
+        language: targetLanguage,
+      });
 
-    // TODO: Replace with actual API call when endpoint is ready
-    // try {
-    //   await trpcClient.content.generateVideo.mutate({
-    //     courseId,
-    //     chapterId,
-    //     language: targetLanguage,
-    //   });
-    // } catch (error) {
-    //   console.error('Error generating video:', error);
-    // }
+      const { toolkitTask, accessToken } = resp as any;
+      if (toolkitTask?.task_id) {
+        pollToolkitTask(toolkitTask.task_id, accessToken);
+      } else {
+        // Fallback to simulated progress if no task id
+        simulateVideoGeneration();
+      }
+    } catch (err) {
+      console.error('Error generating video', err);
+      // fallback
+      simulateVideoGeneration();
+    }
+  };
+
+  const pollToolkitTask = (taskId: string, accessToken: string) => {
+    const toolkitUrl =
+      import.meta.env.VITE_LANG_TOOLKIT_URL ?? 'http://localhost:8000';
+    let pollCount = 0;
+    const maxPolls = 120; // 10 minutes max polling (5s intervals)
+
+    const interval = setInterval(async () => {
+      pollCount++;
+      try {
+        const res = await fetch(`${toolkitUrl}/tasks/${taskId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (!res.ok) throw new Error(`Status: ${res.status}`);
+
+        const data = await res.json();
+        console.log('Task status:', data);
+
+        if (data.status === 'completed') {
+          setVideoGenerationProgress(100);
+          clearInterval(interval);
+          console.log('Video generation completed successfully');
+        } else if (data.status === 'failed') {
+          clearInterval(interval);
+          console.error('Toolkit task failed', data.error);
+          // You might want to show an error message to the user here
+        } else if (data.status === 'running' || data.status === 'pending') {
+          // Update progress based on messages or progress field
+          if (data.progress) {
+            // Try to extract percentage from progress message
+            const match = /([0-9]+)%/.exec(data.progress);
+            if (match) {
+              setVideoGenerationProgress(Number(match[1]));
+            } else {
+              // If no percentage, estimate based on time elapsed
+              const estimatedProgress = Math.min(
+                90,
+                (pollCount / maxPolls) * 100,
+              );
+              setVideoGenerationProgress(estimatedProgress);
+            }
+          } else {
+            // Estimate progress based on polling count
+            const estimatedProgress = Math.min(
+              90,
+              (pollCount / maxPolls) * 100,
+            );
+            setVideoGenerationProgress(estimatedProgress);
+          }
+        }
+
+        // Stop polling after max attempts
+        if (pollCount >= maxPolls) {
+          clearInterval(interval);
+          console.warn('Video generation timeout - stopped polling');
+        }
+      } catch (e) {
+        console.error('Polling error', e);
+        if (pollCount >= 3) {
+          // Stop after 3 consecutive errors
+          clearInterval(interval);
+          console.error('Too many polling errors, stopping');
+        }
+      }
+    }, 5000);
   };
 
   const simulateVideoGeneration = () => {
