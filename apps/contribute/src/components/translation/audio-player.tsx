@@ -329,13 +329,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           })}
         </p>
       )}
-      {exists === false && (
-        <p className="text-sm text-gray-500 mb-2">
-          {t('translate.audioNotFound', {
-            defaultValue: 'Audio resource not found.',
-          })}
-        </p>
-      )}
 
       {/* Audio Player Container */}
       <div

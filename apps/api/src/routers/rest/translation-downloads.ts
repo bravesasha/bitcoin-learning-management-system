@@ -86,6 +86,7 @@ export const createRestTranslationDownloadRoutes = async (
         const commandBody = {
           c: 'forcesave',
           key: documentKey,
+          forceSaveType: 3, // Overwrite existing file instead of creating new revision
           userdata: JSON.stringify({
             courseId,
             partId,
@@ -158,8 +159,12 @@ export const createRestTranslationDownloadRoutes = async (
             const documentStream = Readable.from(Buffer.from(documentBuffer));
 
             // Save to S3, replacing the existing file
-            const s3Key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+            // Save as a new "proofread" revision so the original remains untouched
+            const proofreadFileName = fileName.endsWith('-proofread')
+              ? fileName
+              : `${fileName}-proofread`;
 
+            const s3Key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${proofreadFileName}.pptx`;
             await dependencies.s3.upload(s3Key, documentStream, {
               contentType:
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -200,19 +205,27 @@ export const createRestTranslationDownloadRoutes = async (
           throw new BadRequest('Missing required path parameters');
         }
 
-        // New path format
-        // <courseId>/<language>/<partId>/<chapterId>/<slideId>/pptx/<slideId>.pptx
-        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        // Prefer the proofread version if it exists, otherwise fall back to original
+        const baseKey = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        const proofreadKey = baseKey.replace(
+          `${fileName}.pptx`,
+          `${fileName}-proofread.pptx`,
+        );
 
-        // Try head for headers
-        const head = await dependencies.s3.head(key).catch(() => null);
+        let key = proofreadKey;
+        let head = await dependencies.s3.head(key).catch(() => null);
 
-        const stream = await dependencies.s3.getStream(key);
+        if (!head) {
+          key = baseKey;
+          head = await dependencies.s3.head(key).catch(() => null);
+        }
 
-        if (!stream) {
+        if (!head) {
           res.status(404).send('Not found');
           return;
         }
+
+        const stream = await dependencies.s3.getStream(key);
 
         // Add CORS headers to allow OnlyOffice to access the files
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -231,7 +244,7 @@ export const createRestTranslationDownloadRoutes = async (
           res.setHeader('Content-Length', String(head.contentLength));
         }
 
-        stream.pipe(res);
+        stream!.pipe(res);
       } catch (error) {
         req.log('Error:', error);
         if (error instanceof NoSuchKey) {
@@ -325,17 +338,26 @@ export const createRestTranslationDownloadRoutes = async (
           tokenData as any;
 
         // Path format used by the contribute front-end for generated pptx files
-        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        const baseKey = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        const proofreadKey = baseKey.replace(
+          `${fileName}.pptx`,
+          `${fileName}-proofread.pptx`,
+        );
 
-        // Try head for headers
-        const head = await dependencies.s3.head(key).catch(() => null);
+        let key = proofreadKey;
+        let head = await dependencies.s3.head(key).catch(() => null);
 
-        const stream = await dependencies.s3.getStream(key);
+        if (!head) {
+          key = baseKey;
+          head = await dependencies.s3.head(key).catch(() => null);
+        }
 
-        if (!stream) {
+        if (!head) {
           res.status(404).send('File not found');
           return;
         }
+
+        const stream = await dependencies.s3.getStream(key);
 
         res.setHeader(
           'Content-Type',
@@ -349,7 +371,7 @@ export const createRestTranslationDownloadRoutes = async (
         // Clean up token after successful download
         downloadTokens.delete(token);
 
-        stream.pipe(res);
+        stream!.pipe(res);
       } catch (error) {
         req.log('Error:', error);
         if (error instanceof NoSuchKey) {
@@ -418,7 +440,7 @@ export const createRestTranslationDownloadRoutes = async (
           res.setHeader('Content-Length', String(head.contentLength));
           res.setHeader('Accept-Ranges', 'bytes');
 
-          return void stream.pipe(res);
+          return void stream!.pipe(res);
         }
 
         // -----------------------------
@@ -463,7 +485,7 @@ export const createRestTranslationDownloadRoutes = async (
         );
         res.setHeader('Accept-Ranges', 'bytes');
 
-        stream.pipe(res);
+        stream!.pipe(res);
         return;
       } catch (error) {
         req.log('Error:', error);
@@ -570,12 +592,24 @@ export const createRestTranslationDownloadRoutes = async (
           throw new BadRequest('Missing required path parameters');
         }
 
-        // New path format
-        // <courseId>/<language>/<partId>/<chapterId>/<slideId>/pptx/<slideId>.pptx
-        const key = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        const baseKey = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/pptx/${fileName}.pptx`;
+        const proofreadKey = baseKey.replace(
+          `${fileName}.pptx`,
+          `${fileName}-proofread.pptx`,
+        );
 
-        // Try head for headers
-        const head = await dependencies.s3.head(key).catch(() => null);
+        let key = proofreadKey;
+        let head = await dependencies.s3.head(key).catch(() => null);
+
+        if (!head) {
+          key = baseKey;
+          head = await dependencies.s3.head(key).catch(() => null);
+        }
+
+        if (!head) {
+          res.status(404).send('Not found');
+          return;
+        }
 
         const stream = await dependencies.s3.getStream(key);
 
@@ -601,7 +635,7 @@ export const createRestTranslationDownloadRoutes = async (
           res.setHeader('Content-Length', String(head.contentLength));
         }
 
-        stream.pipe(res);
+        stream!.pipe(res);
       } catch (error) {
         req.log('Error:', error);
         if (error instanceof NoSuchKey) {
