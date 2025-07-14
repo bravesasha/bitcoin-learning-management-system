@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  memo,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -38,7 +39,7 @@ export interface OnlyOfficeSlideEditorRef {
  * This component uses the OnlyOffice JavaScript API to properly initialize
  * the presentation editor with the correct configuration.
  */
-export const OnlyOfficeSlideEditor = forwardRef<
+const OnlyOfficeSlideEditorInner = forwardRef<
   OnlyOfficeSlideEditorRef,
   OnlyOfficeSlideEditorProps
 >(
@@ -59,7 +60,8 @@ export const OnlyOfficeSlideEditor = forwardRef<
     const containerRef = useRef<HTMLDivElement>(null);
     const editorInstanceRef = useRef<any>(null);
     const documentKeyRef = useRef<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
+    // Track manual save status without triggering React re-renders (DOM reconciliation issues)
+    const isSavingRef = useRef(false);
     const [loadingState, setLoadingState] = useState<
       'loading' | 'ready' | 'error'
     >('loading');
@@ -93,7 +95,7 @@ export const OnlyOfficeSlideEditor = forwardRef<
             language,
           });
 
-          setIsSaving(true);
+          isSavingRef.current = true;
 
           const documentKey = documentKeyRef.current;
           if (!documentKey) {
@@ -134,16 +136,16 @@ export const OnlyOfficeSlideEditor = forwardRef<
             );
 
             setTimeout(() => {
-              setIsSaving(false);
+              isSavingRef.current = false;
               console.log('Manual save process completed');
             }, 5000);
           } else {
             console.error('Forcesave command failed:', result);
-            setIsSaving(false);
+            isSavingRef.current = false;
           }
         } catch (error) {
           console.error('Error during manual save:', error);
-          setIsSaving(false);
+          isSavingRef.current = false;
         }
       },
     }));
@@ -539,4 +541,16 @@ export const OnlyOfficeSlideEditor = forwardRef<
       </div>
     );
   },
+);
+
+// Memoize to avoid React re-rendering (and diffing) the DOM altered by OnlyOffice once mounted.
+export const OnlyOfficeSlideEditor = memo(
+  OnlyOfficeSlideEditorInner,
+  (prev, next) =>
+    prev.fileUrl === next.fileUrl &&
+    prev.language === next.language &&
+    prev.slideId === next.slideId &&
+    prev.chapterId === next.chapterId &&
+    prev.partId === next.partId &&
+    prev.courseId === next.courseId,
 );
