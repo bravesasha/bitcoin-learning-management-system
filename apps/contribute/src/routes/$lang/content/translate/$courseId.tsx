@@ -251,7 +251,15 @@ function ProofreadCoursePage() {
                 defaultValue: 'Bridging language gaps, one video at a time',
               })}
             </p>
-            <h1 className="text-3xl font-bold mb-4 text-gray-900">
+            <h1
+              className="mb-4 text-gray-900"
+              style={{
+                fontFamily: 'Rubik, sans-serif',
+                fontWeight: 400,
+                fontSize: '48px',
+                lineHeight: '117%',
+              }}
+            >
               {t('translate.bitcoinTranslationCommunity', {
                 defaultValue: 'Bitcoin Proofreading Community',
               })}
@@ -301,7 +309,15 @@ function ProofreadCoursePage() {
                 >
                   {course?.index?.toUpperCase() || courseId.toUpperCase()}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2
+                  className="text-gray-900"
+                  style={{
+                    fontFamily: 'Rubik, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '32px',
+                    lineHeight: '120%',
+                  }}
+                >
                   {course?.name || 'The Bitcoin Journey'}
                 </h2>
               </div>

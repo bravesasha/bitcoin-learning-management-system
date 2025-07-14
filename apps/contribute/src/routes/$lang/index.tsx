@@ -57,14 +57,27 @@ function ContributePage() {
         {/* Hero section */}
         <section className="w-full py-12 text-center px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="text-orange-500 font-medium mb-4">
-              {t('translate.makingBitcoinEducationGlobal')}
+            <div className="text-orange-500 text-base font-medium mb-2">
+              {t('translate.bridgingLanguageGaps', {
+                defaultValue: 'Bridging language gaps, one video at a time',
+              })}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1
+              className="mb-4 text-gray-900"
+              style={{
+                fontFamily: 'Rubik, sans-serif',
+                fontWeight: 400,
+                fontSize: '48px',
+                lineHeight: '117%',
+              }}
+            >
               {t('translate.bitcoinTranslationCommunity')}
             </h1>
-            <p className="text-gray-600 mb-8 max-w-3xl mx-auto">
-              {t('translate.bridgingLanguageGaps')}
+            <p className="text-gray-600 max-w-3xl mx-auto mb-8">
+              {t('translate.joinOurProofreaders', {
+                defaultValue:
+                  'Join our proofreading team to make Bitcoin education accessible worldwide. You can help more people engage with the ecosystem and find their path to freedom!',
+              })}
             </p>
           </div>
         </section>

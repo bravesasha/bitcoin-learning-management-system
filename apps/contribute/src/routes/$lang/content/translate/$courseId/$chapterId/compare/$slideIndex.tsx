@@ -556,7 +556,15 @@ function CompareSlidePage() {
             defaultValue: 'Bridging language gaps, one video at a time',
           })}
         </p>
-        <h1 className="text-3xl font-bold mb-4 text-gray-900">
+        <h1
+          className="mb-4 text-gray-900"
+          style={{
+            fontFamily: 'Rubik, sans-serif',
+            fontWeight: 400,
+            fontSize: '48px',
+            lineHeight: '117%',
+          }}
+        >
           {t('translate.bitcoinTranslationCommunity', {
             defaultValue: 'Bitcoin Proofreading Community',
           })}
@@ -589,8 +597,16 @@ function CompareSlidePage() {
           >
             {chapterData.context.courseIndex?.toUpperCase()}
           </div>
-          <h2 className="text-2xl font-semibold text-gray-900">
-            {chapterData.context.courseName}
+          <h2
+            className="text-gray-900"
+            style={{
+              fontFamily: 'Rubik, sans-serif',
+              fontWeight: 500,
+              fontSize: '32px',
+              lineHeight: '120%',
+            }}
+          >
+            {chapterData?.context.courseName}
           </h2>
           <span className="ml-auto text-sm font-medium text-gray-900 text-right">
             {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
