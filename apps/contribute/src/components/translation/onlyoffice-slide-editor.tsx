@@ -56,11 +56,17 @@ export const OnlyOfficeSlideEditor = forwardRef<
     },
     ref,
   ) => {
-    const editorRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const editorInstanceRef = useRef<any>(null);
-    // Store the generated document key so we can reuse it when triggering forcesave
     const documentKeyRef = useRef<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [loadingState, setLoadingState] = useState<
+      'loading' | 'ready' | 'error'
+    >('loading');
+    const editorId = useRef(
+      `onlyoffice-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
+    const cleanupRef = useRef<(() => void) | null>(null);
 
     // Expose saveDocument method to parent component
     useImperativeHandle(ref, () => ({
@@ -87,10 +93,8 @@ export const OnlyOfficeSlideEditor = forwardRef<
             language,
           });
 
-          // Set saving state
           setIsSaving(true);
 
-          // Use our API proxy to trigger OnlyOffice forcesave (avoids CORS issues)
           const documentKey = documentKeyRef.current;
           if (!documentKey) {
             console.error(
@@ -118,7 +122,7 @@ export const OnlyOfficeSlideEditor = forwardRef<
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(commandBody),
-            credentials: 'include', // Include session cookies for authentication
+            credentials: 'include',
           });
 
           const result = await response.json();
@@ -129,11 +133,10 @@ export const OnlyOfficeSlideEditor = forwardRef<
               'Manual save requested successfully - waiting for callback...',
             );
 
-            // Wait a reasonable time for the callback to complete, then reset state
             setTimeout(() => {
               setIsSaving(false);
               console.log('Manual save process completed');
-            }, 5000); // 5 second timeout
+            }, 5000);
           } else {
             console.error('Forcesave command failed:', result);
             setIsSaving(false);
@@ -146,13 +149,19 @@ export const OnlyOfficeSlideEditor = forwardRef<
     }));
 
     useEffect(() => {
-      if (!fileUrl || !editorRef.current) {
+      if (!fileUrl) {
+        setLoadingState('loading');
         return;
       }
 
-      // Generate a short-lived download URL for OnlyOffice via token endpoint
+      let isMounted = true;
+
       const initializeEditor = async () => {
         try {
+          if (!containerRef.current || !isMounted) return;
+
+          setLoadingState('loading');
+
           if (
             !courseId ||
             !partId ||
@@ -164,12 +173,11 @@ export const OnlyOfficeSlideEditor = forwardRef<
             console.error(
               'Missing path parameters for OnlyOffice initialization',
             );
+            setLoadingState('error');
             return;
           }
 
-          // Determine API host for callback URLs inside the OnlyOffice container
-          //  - For the browser we can safely rely on a relative path for the token request
-          //  - For the OnlyOffice callback we still need a host reachable from the container
+          // Determine API host for callback URLs
           const isHybridDev =
             window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1';
@@ -177,8 +185,7 @@ export const OnlyOfficeSlideEditor = forwardRef<
             ? 'host.docker.internal:3000'
             : 'api:3000';
 
-          // Request a short download token (reduces URL length) – call the API through the same
-          // origin as the frontend to avoid DNS resolution issues in the browser.
+          // Request download token
           const tokenResp = await fetch(
             '/api/translation-downloads/pptx-token',
             {
@@ -197,30 +204,32 @@ export const OnlyOfficeSlideEditor = forwardRef<
 
           if (!tokenResp.ok) {
             console.error('Failed to obtain OnlyOffice download token');
+            setLoadingState('error');
             return;
           }
 
           const { downloadUrl } = await tokenResp.json();
 
-          // Ensure the download URL is reachable from inside the OnlyOffice container.
-          // When the frontend runs on localhost the API host seen by the container should be
-          // `host.docker.internal` (macOS/Windows) or the docker-compose service name `api`.
-          // We already computed `apiHost` based on the running environment.
-
           let absoluteFileUrl: string = downloadUrl as string;
           if (isHybridDev) {
-            // Replace "localhost:3000" (or 127.0.0.1) with a host resolvable inside Docker
             absoluteFileUrl = absoluteFileUrl
               .replace('localhost:3000', apiHost)
               .replace('127.0.0.1:3000', apiHost);
           }
 
-          // Generate a unique document key (OnlyOffice uses this for document identification)
+          // Generate document key
           const documentKey = btoa(absoluteFileUrl).replace(
             /[^a-zA-Z0-9]/g,
             '',
           );
           documentKeyRef.current = documentKey;
+
+          console.log('OnlyOffice initialization params:', {
+            editorId: editorId.current,
+            documentKey,
+            absoluteFileUrl,
+            apiHost,
+          });
 
           // OnlyOffice configuration
           const config: any = {
@@ -254,26 +263,18 @@ export const OnlyOfficeSlideEditor = forwardRef<
             editorConfig: {
               mode: 'edit',
               lang: 'en',
-              // Add callback URL for manual saves
-              ...(courseId &&
-                partId &&
-                chapterId &&
-                slideId &&
-                language &&
-                fileName && {
-                  callbackUrl: `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-callback?courseId=${courseId}&partId=${partId}&chapterId=${chapterId}&slideId=${slideId}&language=${language}&fileName=${fileName}`,
-                }),
+              callbackUrl: `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-callback?courseId=${courseId}&partId=${partId}&chapterId=${chapterId}&slideId=${slideId}&language=${language}&fileName=${fileName}`,
               coEditing: {
                 mode: 'fast',
-                change: false, // Disable change tracking
+                change: false,
               },
               user: {
                 id: 'user-1',
                 name: 'Translator',
               },
               customization: {
-                autosave: false, // Disable auto-save completely
-                forcesave: false, // Disable force save
+                autosave: false,
+                forcesave: false,
                 commentAuthorOnly: false,
                 comments: true,
                 compactToolbar: false,
@@ -319,8 +320,8 @@ export const OnlyOfficeSlideEditor = forwardRef<
                 uiTheme: 'theme-classic-light',
                 toolbar: {
                   file: {
-                    save: false, // Hide save button - we handle saving manually
-                    print: false, // Hide print button
+                    save: false,
+                    print: false,
                   },
                 },
               },
@@ -330,10 +331,12 @@ export const OnlyOfficeSlideEditor = forwardRef<
             events: {
               onAppReady: () => {
                 console.log('OnlyOffice editor is ready');
+                if (isMounted) {
+                  setLoadingState('ready');
+                }
               },
               onDocumentStateChange: (event: any) => {
                 console.log('Document state changed:', event);
-                // Notify parent component when document is modified
                 if (onDocumentModified) {
                   onDocumentModified();
                 }
@@ -343,29 +346,32 @@ export const OnlyOfficeSlideEditor = forwardRef<
                 if (event.data?.error) {
                   console.error('Error details:', event.data.error);
                 }
+                if (isMounted) {
+                  setLoadingState('error');
+                }
               },
               onRequestRestore: () => {
                 console.log('OnlyOffice requesting document restore');
-                return false; // Prevent default restore behavior
+                return false;
               },
               onRequestSaveAs: (event: any) => {
                 console.log('OnlyOffice requesting save as');
-                return false; // Prevent default save as behavior
+                return false;
               },
               onDownloadAs: (event: any) => {
                 console.log('OnlyOffice downloading document');
-                return false; // Prevent default download behavior
+                return false;
               },
               onRequestSave: () => {
                 console.log('OnlyOffice requesting save');
-                return false; // Prevent default save behavior
+                return false;
               },
               onRequestClose: () => {
                 console.log('OnlyOffice requesting close');
-                return false; // Prevent default close behavior
+                return false;
               },
             },
-            token: '', // No JWT token for development
+            token: '',
           };
 
           // Load OnlyOffice API script if not already loaded
@@ -373,65 +379,164 @@ export const OnlyOfficeSlideEditor = forwardRef<
             const script = document.createElement('script');
             script.src = 'http://localhost/web-apps/apps/api/documents/api.js';
             script.onload = () => {
-              // Initialize OnlyOffice editor
-              if ((window as any).DocsAPI) {
-                editorInstanceRef.current = new (
-                  window as any
-                ).DocsAPI.DocEditor(editorRef.current!.id, config);
+              if (
+                isMounted &&
+                containerRef.current &&
+                (window as any).DocsAPI
+              ) {
+                // Small delay to ensure container is fully ready
+                setTimeout(() => {
+                  if (isMounted && containerRef.current) {
+                    try {
+                      console.log(
+                        'Creating OnlyOffice editor with ID:',
+                        editorId.current,
+                      );
+                      editorInstanceRef.current = new (
+                        window as any
+                      ).DocsAPI.DocEditor(editorId.current, config);
+                    } catch (error) {
+                      console.error('Error creating OnlyOffice editor:', error);
+                      if (isMounted) {
+                        setLoadingState('error');
+                      }
+                    }
+                  }
+                }, 100);
               }
             };
             script.onerror = () => {
               console.error('Failed to load OnlyOffice API script');
-              if (editorRef.current) {
-                editorRef.current.innerHTML =
-                  '<div style="padding: 20px; color: red;">Failed to load OnlyOffice API. Please check if OnlyOffice server is running.</div>';
+              if (isMounted) {
+                setLoadingState('error');
               }
             };
             document.head.appendChild(script);
           } else {
-            // OnlyOffice API already loaded, initialize directly
-            editorInstanceRef.current = new (window as any).DocsAPI.DocEditor(
-              editorRef.current!.id,
-              config,
-            );
+            // OnlyOffice API already loaded
+            if (isMounted && containerRef.current) {
+              // Small delay to ensure container is fully ready
+              setTimeout(() => {
+                if (isMounted && containerRef.current) {
+                  try {
+                    console.log(
+                      'Creating OnlyOffice editor with ID:',
+                      editorId.current,
+                    );
+                    editorInstanceRef.current = new (
+                      window as any
+                    ).DocsAPI.DocEditor(editorId.current, config);
+                  } catch (error) {
+                    console.error('Error creating OnlyOffice editor:', error);
+                    if (isMounted) {
+                      setLoadingState('error');
+                    }
+                  }
+                }
+              }, 100);
+            }
           }
+
+          // Store cleanup function
+          cleanupRef.current = () => {
+            if (editorInstanceRef.current) {
+              try {
+                if (
+                  typeof editorInstanceRef.current.destroyEditor === 'function'
+                ) {
+                  editorInstanceRef.current.destroyEditor();
+                } else if (
+                  typeof editorInstanceRef.current.destroy === 'function'
+                ) {
+                  editorInstanceRef.current.destroy();
+                }
+              } catch (error) {
+                console.warn('Error destroying OnlyOffice editor:', error);
+              }
+              editorInstanceRef.current = null;
+            }
+          };
         } catch (error) {
           console.error('Error initializing OnlyOffice editor:', error);
-          if (editorRef.current) {
-            editorRef.current.innerHTML =
-              '<div style="padding: 20px; color: red;">Error loading editor. Please try again.</div>';
+          if (isMounted) {
+            setLoadingState('error');
           }
         }
       };
 
-      // Initialize the editor
       initializeEditor();
 
-      // Cleanup function
       return () => {
-        // OnlyOffice doesn't provide a direct cleanup method, but we can clear the container
-        if (editorRef.current) {
-          editorRef.current.innerHTML = '';
+        isMounted = false;
+
+        // Run cleanup
+        if (cleanupRef.current) {
+          cleanupRef.current();
+          cleanupRef.current = null;
         }
+
+        // Clear references
+        documentKeyRef.current = null;
       };
-    }, [fileUrl, courseId, partId, chapterId, slideId, language, fileName]);
+    }, [
+      fileUrl,
+      courseId,
+      partId,
+      chapterId,
+      slideId,
+      language,
+      fileName,
+      onDocumentModified,
+    ]);
 
     if (!fileUrl) {
       return <div className={className}>No slide selected…</div>;
     }
 
     return (
-      <div
-        ref={editorRef}
-        id={`onlyoffice-editor-${Date.now()}`}
-        className={className}
-        style={{
-          width: '100%',
-          height: '600px',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-        }}
-      />
+      <div className={className}>
+        {loadingState === 'loading' && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '600px',
+              backgroundColor: '#f5f5f5',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+            }}
+          >
+            <div style={{ color: '#666' }}>Loading editor...</div>
+          </div>
+        )}
+        {loadingState === 'error' && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '600px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+            }}
+          >
+            <div style={{ color: '#dc2626' }}>
+              Error loading editor. Please try again.
+            </div>
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          id={editorId.current}
+          style={{
+            width: '100%',
+            height: '600px',
+            display: loadingState === 'ready' ? 'block' : 'none',
+          }}
+        />
+      </div>
     );
   },
 );

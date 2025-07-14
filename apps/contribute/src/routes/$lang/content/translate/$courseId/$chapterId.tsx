@@ -1,6 +1,12 @@
 import { TranslationStatus } from '@blms/constants';
 import { Button } from '@blms/ui';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,6 +28,7 @@ import { TranscriptionEditor } from '#src/components/translation/transcription-e
 import { VideoGenerationModal } from '#src/components/video-generation-modal.tsx';
 
 import { BackLink } from '#src/molecules/backlink.tsx';
+import { getLanguageName } from '#src/utils/i18n.ts';
 import { trpcClient } from '#src/utils/trpc.ts';
 
 export const Route = createFileRoute(
@@ -71,6 +78,9 @@ interface ChapterTranslationData {
 function ChapterTranslationPage() {
   const { t, i18n } = useTranslation();
   const { courseId, chapterId } = Route.useParams();
+  const location = useLocation();
+  const isCompareRoute = location.pathname.includes('/compare/');
+
   const navigate = useNavigate();
   const [chapterData, setChapterData] = useState<ChapterTranslationData | null>(
     null,
@@ -133,6 +143,16 @@ function ChapterTranslationPage() {
 
   // Get target language - for now, default to French
   const targetLanguage = 'fr';
+  // Determine original & target language names for display
+  const originalLanguageCode = courseData?.originalLanguage ?? 'en';
+  const originalLanguageName = getLanguageName(originalLanguageCode);
+  const targetLanguageName = getLanguageName(targetLanguage);
+
+  // Determine if an English version exists – for now assume true when original language is not English
+  const hasEnglishVersion = originalLanguageCode.toLowerCase() !== 'en';
+  const versionLabel = hasEnglishVersion
+    ? 'EN version'
+    : `${originalLanguageCode.toUpperCase()} version`;
 
   // Check if all validations are complete for the current slide
   const allValidationsComplete =
@@ -780,7 +800,7 @@ function ChapterTranslationPage() {
     setVideoGenerationProgress(0);
   };
 
-  if (loading) {
+  if (!isCompareRoute && loading) {
     return (
       <PageLayout
         title=""
@@ -794,7 +814,7 @@ function ChapterTranslationPage() {
     );
   }
 
-  if (error) {
+  if (!isCompareRoute && error) {
     return (
       <PageLayout
         title="Error"
@@ -818,7 +838,7 @@ function ChapterTranslationPage() {
     );
   }
 
-  if (!chapterData) {
+  if (!isCompareRoute && !chapterData) {
     return (
       <PageLayout
         title={t('translate.chapterNotFound')}
@@ -838,7 +858,11 @@ function ChapterTranslationPage() {
     );
   }
 
-  const currentSlide = chapterData.slides[currentSlideIndex];
+  const currentSlide = chapterData?.slides?.[currentSlideIndex];
+
+  if (isCompareRoute) {
+    return <Outlet />;
+  }
 
   return (
     <PageLayout
@@ -1066,6 +1090,56 @@ function ChapterTranslationPage() {
           }}
         >
           {/* OnlyOffice header removed per UI request */}
+          {/* Language info header (inside PPT box) */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-[10px]">
+              <span
+                className="text-[18px] font-semibold text-gray-900"
+                style={{ fontFamily: 'Rubik, sans-serif' }}
+              >
+                {t('translate.originalLanguage', {
+                  defaultValue: 'Language',
+                })}
+              </span>
+              <span
+                className="text-orange-500 text-[18px]"
+                style={{ fontFamily: 'Rubik, sans-serif' }}
+              >
+                {originalLanguageName}
+              </span>
+              <span className="text-gray-400">⇄</span>
+              <span
+                className="text-[18px] font-semibold text-gray-900"
+                style={{ fontFamily: 'Rubik, sans-serif' }}
+              >
+                {t('translate.translateTo', { defaultValue: 'Translate to' })}
+              </span>
+              <span
+                className="text-orange-500 text-[18px]"
+                style={{ fontFamily: 'Rubik, sans-serif' }}
+              >
+                {targetLanguageName}
+              </span>
+            </div>
+            <Link
+              to="/$lang/content/translate/$courseId/$chapterId/compare/$slideIndex"
+              params={{
+                lang: i18n.language,
+                courseId,
+                chapterId,
+                slideIndex: String(currentSlideIndex),
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="s"
+                className="text-orange-500 border-orange-500 bg-transparent hover:bg-orange-50"
+              >
+                {versionLabel}
+              </Button>
+            </Link>
+          </div>
 
           <div className="mb-6">
             <OnlyOfficeSlideEditor
