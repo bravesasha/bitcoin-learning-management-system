@@ -92,7 +92,7 @@ function TranslateCoursesPage() {
 
   return (
     <MainLayout variant="dark" footerVariant="light">
-      <div className="flex flex-col items-center bg-white text-black">
+      <div className="flex flex-col items-center bg-white text-black pb-[100px]">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Main Content Header */}
           <div className="text-center mb-10 mt-10">

@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import BreadcrumbArrowIcon from '#src/assets/icons/breadcrumb_navigation_arrow_orange.svg';
-import { CircuitPattern } from '#src/components/circuit-pattern.tsx';
-import { InfoBanner, MainLayout, SectionCard } from '#src/components/index.ts';
+import { MainLayout, SectionCard } from '#src/components/index.ts';
 import { trpcClient } from '#src/utils/trpc.ts';
 
 export const Route = createFileRoute('/$lang/content/')({
@@ -53,7 +52,7 @@ function ContentSectionPage() {
 
   return (
     <MainLayout variant="dark" footerVariant="light">
-      <div className="flex flex-col items-center bg-white text-black">
+      <div className="flex flex-col items-center bg-white text-black pb-[100px]">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Main Content Header */}
           <div className="text-center mb-10 mt-10">
@@ -103,9 +102,14 @@ function ContentSectionPage() {
             {t('translate.selectSection')}
           </h2>
 
-          <InfoBanner variant="warning">
-            {t('translate.sectionSelectionInfo')}
-          </InfoBanner>
+          <div className="mb-8">
+            <p
+              className="text-black font-normal text-base leading-6 tracking-[0.15px]"
+              style={{ fontFamily: 'Rubik, sans-serif' }}
+            >
+              {t('translate.sectionSelectionInfo')}
+            </p>
+          </div>
 
           {/* Section Selection Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
@@ -120,15 +124,6 @@ function ContentSectionPage() {
             <SectionCard title="Tutoriels" progress={73} isComingSoon={true} />
 
             <SectionCard title="WebLate" progress={89} isComingSoon={true} />
-          </div>
-        </div>
-
-        {/* Circuit background decoration */}
-        <div className="w-full bg-gray-50 py-12 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="opacity-70">
-              <CircuitPattern />
-            </div>
           </div>
         </div>
       </div>

@@ -4,7 +4,6 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { CircuitPattern } from '#src/components/circuit-pattern.tsx';
 import { MainLayout } from '#src/components/layouts/main-layout.tsx';
 import Flag from '#src/molecules/Flag/index.tsx';
 
@@ -53,7 +52,7 @@ function ContributePage() {
 
   return (
     <MainLayout variant="dark" footerVariant="light">
-      <div className="flex flex-col items-center bg-white text-black">
+      <div className="flex flex-col items-center bg-white text-black pb-[100px]">
         {/* Hero section */}
         <section className="w-full py-12 text-center px-4">
           <div className="max-w-4xl mx-auto">
@@ -109,20 +108,25 @@ function ContributePage() {
             </div>
           </div>
         </section>
-
+        {/* Divider */}
+        <div className="w-full px-4">
+          <hr className="w-full max-w-4xl mx-auto border-t border-[#808080] my-12" />
+        </div>
         {/* Request language section */}
-        <section className="w-full py-12 px-4">
-          <div className="max-w-3xl mx-auto bg-gray-50 rounded-lg p-8">
-            <h2 className="text-3xl font-bold text-orange-500 mb-4">
-              {t('translate.languageMissing')}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {t('translate.helpExpandBitcoinEducation')}
-            </p>
-            <div className="text-right">
+        <section className="w-full px-4">
+          <div className="mx-auto w-full max-w-[905px] h-[189px] bg-gray-50 border border-[#E5E5E5] rounded-[20px] p-5 flex">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-orange-500 text-[40px] leading-[1.24] tracking-[0.25px] font-normal text-left">
+                {t('translate.languageMissing')}
+              </h2>
+              <p className="text-gray-600 text-[20px] leading-[1.33] font-normal text-left">
+                {t('translate.helpExpandBitcoinEducation')}
+              </p>
+            </div>
+            <div className="ml-auto flex items-end">
               <a
                 href="mailto:contact@planb.network"
-                className="inline-flex items-center px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="inline-flex items-center px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap shrink-0"
               >
                 {t('translate.contactUs')}{' '}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -130,15 +134,6 @@ function ContributePage() {
             </div>
           </div>
         </section>
-
-        {/* Circuit background decoration */}
-        <div className="w-full bg-gray-50 py-12 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="opacity-70">
-              <CircuitPattern />
-            </div>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );
