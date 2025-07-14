@@ -3,6 +3,7 @@ import { Readable } from 'node:stream';
 import { NoSuchKey } from '@blms/s3';
 import type { Router } from 'express';
 
+import { sql } from '@blms/database';
 import type { Dependencies } from '#src/dependencies.js';
 import { BadRequest } from '#src/errors.js';
 import { expressAuthMiddleware } from '#src/middlewares/auth.js';
@@ -642,6 +643,74 @@ export const createRestTranslationDownloadRoutes = async (
           res.status(404).send('Not found');
           return;
         }
+        next(error);
+      }
+    },
+  );
+
+  router.get(
+    '/translation-downloads/pptx-availability/:courseId/:partId/:chapterId/:slideId',
+    async (req, res, next) => {
+      try {
+        const { courseId, partId, chapterId, slideId } = req.params as any;
+
+        if (!courseId || !partId || !chapterId || !slideId) {
+          throw new BadRequest('Missing required path parameters');
+        }
+
+        // List every object in the course folder and extract language codes
+        const prefix = `contribute/${courseId}/`;
+        // Cast to any in case the S3Service type used elsewhere is outdated
+        const keys = await (dependencies.s3 as any).list(prefix);
+
+        // Regex to capture the language code from object keys that belong to the requested slide
+        const regex = new RegExp(
+          `^contribute/${courseId}/([^/]+)/${partId}/${chapterId}/${slideId}/pptx/`,
+        );
+
+        const languages = new Set<string>();
+        for (const key of keys) {
+          const match = key.match(regex);
+          if (match) {
+            languages.add(match[1]);
+          }
+        }
+
+        res.json({ languages: Array.from(languages) });
+      } catch (error) {
+        req.log('Error:', error);
+        next(error);
+      }
+    },
+  );
+
+  router.get(
+    '/translation-downloads/transcript-availability/:courseId/:partId/:chapterId/:slideId',
+    async (req, res, next) => {
+      try {
+        const { courseId, partId, chapterId, slideId } = req.params as any;
+
+        if (!courseId || !partId || !chapterId || !slideId) {
+          throw new BadRequest('Missing required path parameters');
+        }
+
+        // Query database for languages that have non-empty translated_content for this slide
+        const rows = await dependencies.postgres.exec(sql`\
+          SELECT DISTINCT language
+          FROM content.course_translation_slides
+          WHERE course_id = ${courseId}
+            AND part_id = ${partId}
+            AND chapter_id = ${chapterId}
+            AND slide_id = ${slideId}
+            AND translated_content IS NOT NULL
+            AND translated_content <> ''
+        `);
+
+        const languages = rows.map((r: any) => r.language);
+
+        res.json({ languages });
+      } catch (error) {
+        req.log('Error:', error);
         next(error);
       }
     },

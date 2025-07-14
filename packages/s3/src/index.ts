@@ -5,6 +5,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -44,6 +45,7 @@ export interface S3Service {
   head(key: string): Promise<S3Head>;
   delete(key: string): Promise<void>;
   metadata(key: string): Promise<Metadata | null>;
+  list(prefix: string): Promise<string[]>;
 }
 
 export interface S3Head {
@@ -162,6 +164,35 @@ export const createS3Service = (config: S3Config): S3Service => {
       const cmd = new DeleteObjectCommand({ Bucket, Key: base(key) });
 
       return s3.send(cmd).then(() => void 0);
+    },
+    // List all object keys under the given prefix (recursively). Returns an
+    // array of full object keys.
+    async list(prefix: string): Promise<string[]> {
+      const keys: string[] = [];
+      let continuationToken: string | undefined;
+
+      do {
+        const { Contents, IsTruncated, NextContinuationToken } = await s3.send(
+          new ListObjectsV2Command({
+            Bucket,
+            Prefix: base(prefix),
+            ContinuationToken: continuationToken,
+          }),
+        );
+
+        // Replace forEach with for...of to satisfy lint rule
+        if (Contents) {
+          for (const obj of Contents) {
+            if (obj.Key) {
+              keys.push(obj.Key);
+            }
+          }
+        }
+
+        continuationToken = IsTruncated ? NextContinuationToken : undefined;
+      } while (continuationToken);
+
+      return keys;
     },
     // Return the metadata of the requested file
     metadata(key: string) {
