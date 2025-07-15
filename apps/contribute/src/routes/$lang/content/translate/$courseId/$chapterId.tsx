@@ -879,11 +879,10 @@ function ChapterTranslationPage() {
           })}
         </p>
         <h1
-          className="mb-4 text-gray-900"
+          className="mb-4 text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
           style={{
             fontFamily: 'Rubik, sans-serif',
             fontWeight: 400,
-            fontSize: '48px',
             lineHeight: '117%',
           }}
         >
@@ -909,11 +908,13 @@ function ChapterTranslationPage() {
             params={{ courseId }}
             className="text-orange-500 hover:text-orange-600 font-medium"
           >
-            {chapterData.context.courseIndex?.toUpperCase()}
+            {chapterData?.context.courseIndex?.toUpperCase()}
           </Link>
           <img src={BreadcrumbArrowIcon} alt="" className="w-[8px] h-[12px]" />
           <span className="text-orange-500 font-medium">
-            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
+            {chapterData
+              ? `${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`
+              : ''}
           </span>
         </div>
 
@@ -923,21 +924,22 @@ function ChapterTranslationPage() {
             className="text-gray-700 px-3 py-1 rounded text-sm font-medium"
             style={{ backgroundColor: '#E5E5E5' }}
           >
-            {chapterData.context.courseIndex?.toUpperCase()}
+            {chapterData?.context.courseIndex?.toUpperCase()}
           </div>
           <h2
-            className="text-gray-900"
+            className="text-gray-900 text-xl sm:text-2xl md:text-3xl lg:text-4xl"
             style={{
               fontFamily: 'Rubik, sans-serif',
               fontWeight: 500,
-              fontSize: '32px',
               lineHeight: '120%',
             }}
           >
             {chapterData?.context.courseName}
           </h2>
           <span className="ml-auto text-sm font-medium text-gray-900 text-right">
-            {`${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`}
+            {chapterData
+              ? `${chapterData.context.partIndex}.${chapterData.context.chapterIndex} ${chapterData.context.chapterTitle}`
+              : ''}
           </span>
         </div>
 
@@ -1110,7 +1112,7 @@ function ChapterTranslationPage() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-[10px]">
               <span
-                className="text-[18px] font-semibold text-gray-900"
+                className="text-base sm:text-lg md:text-xl font-semibold text-gray-900"
                 style={{ fontFamily: 'Rubik, sans-serif' }}
               >
                 {t('translate.originalLanguage', {
@@ -1118,20 +1120,20 @@ function ChapterTranslationPage() {
                 })}
               </span>
               <span
-                className="text-orange-500 text-[18px]"
+                className="text-orange-500 text-base sm:text-lg md:text-xl"
                 style={{ fontFamily: 'Rubik, sans-serif' }}
               >
                 {originalLanguageName}
               </span>
               <span className="text-gray-400">⇄</span>
               <span
-                className="text-[18px] font-semibold text-gray-900"
+                className="text-base sm:text-lg md:text-xl font-semibold text-gray-900"
                 style={{ fontFamily: 'Rubik, sans-serif' }}
               >
                 {t('translate.translateTo', { defaultValue: 'Translate to' })}
               </span>
               <span
-                className="text-orange-500 text-[18px]"
+                className="text-orange-500 text-base sm:text-lg md:text-xl"
                 style={{ fontFamily: 'Rubik, sans-serif' }}
               >
                 {targetLanguageName}

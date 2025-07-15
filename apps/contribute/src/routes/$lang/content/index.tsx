@@ -62,11 +62,10 @@ function ContentSectionPage() {
               })}
             </p>
             <h1
-              className="mb-4 text-gray-900"
+              className="mb-4 text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
               style={{
                 fontFamily: 'Rubik, sans-serif',
                 fontWeight: 400,
-                fontSize: '48px',
                 lineHeight: '117%',
               }}
             >

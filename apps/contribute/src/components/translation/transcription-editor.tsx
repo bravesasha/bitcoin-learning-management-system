@@ -50,7 +50,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           {/* Source language selector */}
           <div className="flex items-center gap-[10px]">
             <span
-              className="text-[18px] font-semibold text-gray-900"
+              className="text-base sm:text-lg md:text-xl font-semibold text-gray-900"
               style={{ fontFamily: 'Rubik, sans-serif' }}
             >
               {t('translate.language', { defaultValue: 'Language' })}
@@ -72,13 +72,15 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           <div className="flex items-center gap-2 lg:justify-start justify-start">
             <span className="text-gray-400">⇄</span>
             <span
-              className="text-[18px] font-semibold text-gray-900"
+              className="text-base sm:text-lg md:text-xl font-semibold text-gray-900"
               style={{ fontFamily: 'Rubik, sans-serif' }}
             >
               {t('translate.translateTo', { defaultValue: 'Translate to' })}
             </span>
             {/* TODO: make target language dynamic */}
-            <span className="text-orange-500">Italiano</span>
+            <span className="text-orange-500 text-base sm:text-lg md:text-xl">
+              Italiano
+            </span>
           </div>
         </div>
       </div>
@@ -120,7 +122,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             size="m"
             variant="primary"
             disabled={generateDisabled || !transcriptionValidated}
-            className={`shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-[18px] leading-[18px] font-medium ${generateDisabled || !transcriptionValidated ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className={`shadow-[0_2px_3px_rgba(0,0,0,0.25)] flex gap-[10px] text-sm sm:text-base md:text-lg leading-none font-medium ${generateDisabled || !transcriptionValidated ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             {t('translate.generateAudio', { defaultValue: 'Generate audio' })}
           </Button>

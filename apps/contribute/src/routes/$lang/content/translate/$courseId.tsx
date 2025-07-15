@@ -252,11 +252,10 @@ function ProofreadCoursePage() {
               })}
             </p>
             <h1
-              className="mb-4 text-gray-900"
+              className="mb-4 text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
               style={{
                 fontFamily: 'Rubik, sans-serif',
                 fontWeight: 400,
-                fontSize: '48px',
                 lineHeight: '117%',
               }}
             >
@@ -310,11 +309,10 @@ function ProofreadCoursePage() {
                   {course?.index?.toUpperCase() || courseId.toUpperCase()}
                 </div>
                 <h2
-                  className="text-gray-900"
+                  className="text-gray-900 text-xl sm:text-2xl md:text-3xl lg:text-4xl"
                   style={{
                     fontFamily: 'Rubik, sans-serif',
                     fontWeight: 500,
-                    fontSize: '32px',
                     lineHeight: '120%',
                   }}
                 >
@@ -323,21 +321,8 @@ function ProofreadCoursePage() {
               </div>
 
               {/* Progress Card */}
-              <div className="flex-shrink-0">
-                <div
-                  style={{
-                    width: '300px',
-                    height: '73px',
-                    backgroundColor: '#F6F6F6',
-                    border: '1px solid #E5E5E5',
-                    borderRadius: '8px',
-                    padding: '4px 10px',
-                    boxShadow: '0 1px 1px 0 rgba(0, 0, 0, 0.25)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  }}
-                >
+              <div className="flex-shrink-0 w-full lg:w-[300px]">
+                <div className="w-full h-auto bg-[#F6F6F6] border border-[#E5E5E5] rounded-lg px-[10px] py-[4px] shadow-sm flex flex-col justify-between">
                   <span className="text-sm font-medium text-gray-900">
                     {t('translate.courseProofreadingProgress', {
                       defaultValue: 'Course proofreading progress',

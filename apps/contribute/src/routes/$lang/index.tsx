@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { MainLayout } from '#src/components/layouts/main-layout.tsx';
-import Flag from '#src/molecules/Flag/index.tsx';
+// Removed Flag import because flags are no longer displayed
 
 export const Route = createFileRoute('/$lang/')({
   component: ContributePage,
@@ -62,11 +62,10 @@ function ContributePage() {
               })}
             </div>
             <h1
-              className="mb-4 text-gray-900"
+              className="mb-4 text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
               style={{
                 fontFamily: 'Rubik, sans-serif',
                 fontWeight: 400,
-                fontSize: '48px',
                 lineHeight: '117%',
               }}
             >
@@ -82,8 +81,8 @@ function ContributePage() {
         </section>
 
         {/* Language selection section */}
-        <section className="w-full py-8 px-4 bg-gray-50">
-          <div className="max-w-4xl mx-auto">
+        <section className="w-full py-0 px-4 md:px-10 lg:px-20 xl:px-40 bg-gray-50">
+          <div>
             <h2 className="text-2xl font-bold mb-6">
               {t('translate.selectCourseToTranslate')}
             </h2>
@@ -91,18 +90,17 @@ function ContributePage() {
               {t('translate.youCanSelectOnlyOneCourse')}
             </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,_minmax(135px,_1fr))] gap-x-[20px] gap-y-[20px] justify-items-center">
               {languages.map((lang) => (
                 <button
                   type="button"
                   key={lang.code}
                   onClick={() => handleLanguageSelect(lang.code)}
-                  className="flex flex-col items-center p-4 border border-orange-200 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                  className="flex items-center justify-center px-2 w-[135px] h-[135px] border border-orange-200 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-500 hover:text-black transition-colors cursor-pointer"
                 >
-                  <div className="w-12 h-12 mb-2 flex items-center justify-center">
-                    <Flag code={lang.code} size="l" />
-                  </div>
-                  <span className="text-center font-medium">{lang.name}</span>
+                  <span className="font-medium text-center text-sm md:text-base">
+                    {lang.name}
+                  </span>
                 </button>
               ))}
             </div>
@@ -113,17 +111,17 @@ function ContributePage() {
           <hr className="w-full max-w-4xl mx-auto border-t border-[#808080] my-12" />
         </div>
         {/* Request language section */}
-        <section className="w-full px-4">
-          <div className="mx-auto w-full max-w-[905px] h-[189px] bg-gray-50 border border-[#E5E5E5] rounded-[20px] p-5 flex">
+        <section className="w-full px-4 md:px-10 lg:px-20 xl:px-40">
+          <div className="w-full min-h-[189px] bg-gray-50 border border-[#E5E5E5] rounded-[20px] p-5 flex flex-col md:flex-row">
             <div className="flex flex-col gap-4">
-              <h2 className="text-orange-500 text-[40px] leading-[1.24] tracking-[0.25px] font-normal text-left">
+              <h2 className="text-orange-500 text-3xl md:text-[40px] leading-[1.24] tracking-[0.25px] font-normal text-left">
                 {t('translate.languageMissing')}
               </h2>
-              <p className="text-gray-600 text-[20px] leading-[1.33] font-normal text-left">
+              <p className="text-gray-600 text-base md:text-[20px] leading-[1.33] font-normal text-left">
                 {t('translate.helpExpandBitcoinEducation')}
               </p>
             </div>
-            <div className="ml-auto flex items-end">
+            <div className="ml-auto flex items-end mt-4 md:mt-0">
               <a
                 href="mailto:contact@planb.network"
                 className="inline-flex items-center px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap shrink-0"

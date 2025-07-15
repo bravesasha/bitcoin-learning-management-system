@@ -557,11 +557,10 @@ function CompareSlidePage() {
           })}
         </p>
         <h1
-          className="mb-4 text-gray-900"
+          className="mb-4 text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
           style={{
             fontFamily: 'Rubik, sans-serif',
             fontWeight: 400,
-            fontSize: '48px',
             lineHeight: '117%',
           }}
         >
@@ -598,11 +597,10 @@ function CompareSlidePage() {
             {chapterData.context.courseIndex?.toUpperCase()}
           </div>
           <h2
-            className="text-gray-900"
+            className="text-gray-900 text-xl sm:text-2xl md:text-3xl lg:text-4xl"
             style={{
               fontFamily: 'Rubik, sans-serif',
               fontWeight: 500,
-              fontSize: '32px',
               lineHeight: '120%',
             }}
           >
