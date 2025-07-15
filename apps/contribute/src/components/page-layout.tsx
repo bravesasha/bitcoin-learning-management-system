@@ -28,7 +28,7 @@ export const PageLayout = ({
   children,
   className,
   maxWidth = 'max-w-6xl',
-  paddingXClasses = 'px-2 md:px-10',
+  paddingXClasses = 'px-4',
   hideDescriptionOnMobile = true,
 }: Props) => {
   return (

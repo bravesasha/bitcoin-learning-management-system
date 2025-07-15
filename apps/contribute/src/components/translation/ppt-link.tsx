@@ -10,6 +10,7 @@ interface PptLinkProps {
   language: string;
   onValidate: () => void;
   validated: boolean;
+  leftComponent?: React.ReactNode;
   // removed onSaveChanges and hasUnsavedChanges props
 }
 
@@ -35,6 +36,7 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
   language,
   onValidate,
   validated,
+  leftComponent,
   // removed onSaveChanges and hasUnsavedChanges destructuring
 }) => {
   const [exists, setExists] = useState<boolean | null>(null);
@@ -64,25 +66,6 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
     <>
       {/* PPTX Resource Status */}
       <div className="mb-4">
-        {exists === null && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
-            Checking slide availability...
-          </div>
-        )}
-        {exists === true && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
-            <span>✓</span>
-            <span>Original slide loaded in editor above</span>
-            <a
-              href={url}
-              download={`${slideId}.pptx`}
-              className="ml-2 text-orange-600 underline hover:text-orange-500"
-            >
-              Download original
-            </a>
-          </div>
-        )}
         {exists === false && (
           <div className="flex items-center gap-2 text-sm text-amber-600">
             <span>⚠️</span>
@@ -95,7 +78,14 @@ export const PptLinkSection: React.FC<PptLinkProps> = ({
       </div>
 
       {/* Validate presentation PPT */}
-      <div className="flex justify-end items-center">
+      <div
+        className={`flex flex-col sm:flex-row items-center gap-3 ${leftComponent ? 'sm:justify-between justify-center' : 'justify-center sm:justify-end'}`}
+      >
+        {leftComponent && (
+          <div className="w-full sm:w-auto flex justify-center sm:justify-start">
+            {leftComponent}
+          </div>
+        )}
         <button
           type="button"
           onClick={onValidate}

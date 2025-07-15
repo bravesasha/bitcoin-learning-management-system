@@ -547,7 +547,7 @@ function CompareSlidePage() {
       variant="light"
       footerVariant="light"
       maxWidth="max-w-7xl"
-      paddingXClasses="px-4 md:px-8"
+      paddingXClasses="px-4"
     >
       {/* Header Section – copied from translation page for consistency */}
       <div className="text-center mb-10 mt-10">
@@ -687,7 +687,7 @@ function CompareSlidePage() {
                         }
                       }}
                       disabled={languagesLoading}
-                      className={`appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-[225px] h-[34px] pl-8 pr-3 py-1 ${
+                      className={`appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-full sm:w-[225px] h-[34px] pl-8 pr-3 py-1 ${
                         languagesLoading ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >
@@ -847,7 +847,7 @@ function CompareSlidePage() {
                         }
                       }}
                       disabled={transcriptLanguagesLoading}
-                      className={`appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-[225px] h-[34px] pl-8 pr-3 py-1 ${
+                      className={`appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-full sm:w-[225px] h-[34px] pl-8 pr-3 py-1 ${
                         transcriptLanguagesLoading
                           ? 'opacity-50 cursor-not-allowed'
                           : ''

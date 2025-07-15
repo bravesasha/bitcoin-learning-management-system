@@ -57,7 +57,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             </span>
             {/* Custom select with left arrow */}
             <div className="relative">
-              <select className="appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-[225px] h-[34px] pl-8 pr-3 py-1">
+              <select className="appearance-none bg-white border border-[#CCCCCC] rounded-[10px] text-sm text-orange-500 w-full sm:w-[225px] h-[34px] pl-8 pr-3 py-1">
                 <option>English</option>
               </select>
               {/* Black arrow icon */}
@@ -68,8 +68,8 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               />
             </div>
           </div>
-          {/* Target language information */}
-          <div className="flex items-center gap-2 lg:justify-start justify-start">
+          {/* Target language information (visible only on large screens) */}
+          <div className="hidden lg:flex items-center gap-2 lg:justify-start justify-start">
             <span className="text-gray-400">⇄</span>
             <span
               className="text-base sm:text-lg md:text-xl font-semibold text-gray-900"
@@ -97,6 +97,18 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           </div>
         </div>
 
+        {/* Target language information (visible on small screens, outside the box) */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <span className="text-gray-400">⇄</span>
+          <span
+            className="text-base font-semibold text-gray-900"
+            style={{ fontFamily: 'Rubik, sans-serif' }}
+          >
+            {t('translate.translateTo', { defaultValue: 'Translate to' })}
+          </span>
+          <span className="text-orange-500 text-base">Italiano</span>
+        </div>
+
         {/* Translated Content */}
         <div
           className="bg-white rounded-lg p-4 min-h-[200px]"
@@ -115,8 +127,9 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center">
-        <div className="flex gap-4 items-center">
+      <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-4 md:gap-6">
+        {/* Left group: Generate audio + tries label */}
+        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
           <Button
             onClick={onGenerateAudio}
             size="m"
@@ -126,12 +139,16 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           >
             {t('translate.generateAudio', { defaultValue: 'Generate audio' })}
           </Button>
-          <span className="text-orange-600 text-sm">{triesLabel}</span>
+          <span className="text-orange-600 text-sm md:self-center">
+            {triesLabel}
+          </span>
         </div>
+
+        {/* Right group: Validate transcription */}
         <button
           type="button"
           onClick={onValidateTranscription}
-          className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0"
+          className="flex items-center gap-3 cursor-pointer bg-transparent border-0 p-0 md:mt-0"
         >
           <div
             className={`w-6 h-6 border-2 rounded-[4px] flex items-center justify-center ${
@@ -144,7 +161,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               <span className="text-white text-sm">✓</span>
             )}
           </div>
-          <span className="text-gray-900 font-medium">
+          <span className="text-gray-900 font-medium text-sm sm:text-base md:text-lg">
             {t('translate.validateTranscription', {
               defaultValue: 'Validate transcription',
             })}

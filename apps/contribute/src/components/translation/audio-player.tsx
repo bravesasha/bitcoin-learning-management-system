@@ -461,7 +461,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </a>
 
       {/* Review instructions */}
-      <p className="text-orange-600 text-sm text-center whitespace-pre-line">
+      <p className="text-orange-600 text-base leading-[150%] tracking-[0.15px] text-center whitespace-pre-line">
         {t('translate.reviewInstructions')}
       </p>
     </div>

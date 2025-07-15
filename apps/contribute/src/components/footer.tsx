@@ -28,9 +28,9 @@ export const Footer = ({ variant = 'light', color }: FooterProps) => {
               : 'bg-[#1A1A1A] text-white'),
         )}
       >
-        <div className="relative mx-auto flex w-full max-w-[1440px] min-h-[181px] flex-row justify-center gap-16 px-6 pt-14 pb-[72px]">
+        <div className="relative mx-auto flex w-full max-w-[1440px] min-h-[181px] flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-16 px-6 pt-14 pb-8 md:pb-[72px]">
           {/* Navigation columns */}
-          <div className="flex flex-row gap-16">
+          <div className="flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-16">
             <div
               className="flex flex-col gap-2"
               style={{ fontFamily: 'Rubik' }}
@@ -74,7 +74,7 @@ export const Footer = ({ variant = 'light', color }: FooterProps) => {
           </div>
 
           {/* Social networks */}
-          <div className="flex flex-col items-start gap-4">
+          <div className="flex flex-col items-center md:items-start gap-4 mt-8 md:mt-0">
             <span className="font-bold text-sm md:text-base">Follow us on</span>
             <SocialNetworks variant={variant} />
           </div>
@@ -82,7 +82,7 @@ export const Footer = ({ variant = 'light', color }: FooterProps) => {
           {/* Decorative Orange pill */}
           <img
             src={OrangePill}
-            className="pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2 h-24 md:h-48 lg:h-[243px] rotate-[13deg] select-none"
+            className="pointer-events-none absolute hidden xl:block -right-[120px] xl:right-[140px] top-1/2 -translate-y-1/2 mt-5 h-24 md:h-48 lg:h-[243px] rotate-55 scale-70 select-none"
             alt="Orange Pill"
           />
         </div>

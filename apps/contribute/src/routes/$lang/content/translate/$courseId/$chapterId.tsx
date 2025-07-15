@@ -869,7 +869,7 @@ function ChapterTranslationPage() {
       variant="light"
       footerVariant="light"
       maxWidth="max-w-7xl"
-      paddingXClasses="px-4 md:px-8"
+      paddingXClasses="px-4"
     >
       {/* Main Content Header */}
       <div className="text-center mb-10 mt-10">
@@ -1048,18 +1048,18 @@ function ChapterTranslationPage() {
                 }`}
               >
                 {t('translate.progress', { defaultValue: 'Progress' })} :{' '}
-                {currentSlideIndex + 1}/{chapterData.slides.length}{' '}
+                {currentSlideIndex + 1}/{chapterData!.slides.length}{' '}
                 {t('translate.slides', { defaultValue: 'Slides' })}
               </span>
             </div>
 
             {/* Segmented slide progress bar */}
             <div className="flex items-center gap-1 h-[6px]">
-              {chapterData.slides.map((slide, slideIndex) => {
+              {chapterData!.slides.map((slide, slideIndex) => {
                 const isCompleted = slideIndex < currentSlideIndex;
                 const isCurrent = slideIndex === currentSlideIndex;
                 const isFirst = slideIndex === 0;
-                const isLast = slideIndex === chapterData.slides.length - 1;
+                const isLast = slideIndex === chapterData!.slides.length - 1;
 
                 return (
                   <div
@@ -1147,6 +1147,7 @@ function ChapterTranslationPage() {
                 chapterId,
                 slideIndex: String(currentSlideIndex),
               }}
+              className="hidden md:block"
             >
               <Button
                 type="button"
@@ -1187,6 +1188,27 @@ function ChapterTranslationPage() {
             language={targetLanguage}
             onValidate={handleValidatePresentation}
             validated={validationStates.presentationValidated}
+            leftComponent={
+              <Link
+                to="/$lang/content/translate/$courseId/$chapterId/compare/$slideIndex"
+                params={{
+                  lang: i18n.language,
+                  courseId,
+                  chapterId,
+                  slideIndex: String(currentSlideIndex),
+                }}
+                className="md:hidden"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="s"
+                  className="text-orange-500 border-orange-500 bg-transparent hover:bg-orange-50"
+                >
+                  {versionLabel}
+                </Button>
+              </Link>
+            }
           />
         </div>
       </div>
@@ -1224,6 +1246,19 @@ function ChapterTranslationPage() {
               : `Limit ${audioAttempts}/${MAX_AUDIO_TRIES} tries`
           }
         />
+
+        {/* Max tries reached notice */}
+        {audioAttempts >= MAX_AUDIO_TRIES && (
+          <p
+            className="my-10 text-center text-base leading-[150%] font-normal tracking-[0.15px]"
+            style={{ color: '#FF5C00' }}
+          >
+            {t('translate.maxAudioTriesReached', {
+              defaultValue:
+                'You’ve reached the maximum number of audio generations. To request an additional attempt, please contact the coordinator.',
+            })}
+          </p>
+        )}
 
         <AudioPlayer
           courseId={courseId}

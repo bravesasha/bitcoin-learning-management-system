@@ -1615,6 +1615,7 @@
     "reviewInstructions": "Révisez la transcription, apportez les corrections nécessaires, puis générez l'audio.\nSi l'audio présente un problème qui n'est pas lié à la transcription, vous pouvez signaler le problème.",
     "createVideo": "Créer la vidéo",
     "nextSlide": "Diapositive suivante",
-    "completeAllValidations": "Veuillez compléter toutes les validations avant de continuer"
+    "completeAllValidations": "Veuillez compléter toutes les validations avant de continuer",
+    "maxAudioTriesReached": "Vous avez atteint le nombre maximum de générations audio. Pour demander une tentative supplémentaire, veuillez contacter le coordinateur."
   }
 }

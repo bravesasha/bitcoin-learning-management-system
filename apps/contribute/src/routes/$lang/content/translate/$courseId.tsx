@@ -242,7 +242,7 @@ function ProofreadCoursePage() {
           variant="light"
           footerVariant="light"
           maxWidth="max-w-7xl"
-          paddingXClasses="px-4 md:px-8"
+          paddingXClasses="px-4"
         >
           {/* Main Content Header */}
           <div className="text-center mb-8 mt-8">

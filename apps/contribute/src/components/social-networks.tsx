@@ -1,6 +1,6 @@
 import { BsGithub, BsLinkedin, BsTwitterX, BsYoutube } from 'react-icons/bs';
-import { RiRocketLine } from 'react-icons/ri';
 import { SiRumble } from 'react-icons/si';
+import Nostr from '#src/assets/icons/nostr.svg?react';
 
 import { cn } from '@blms/ui';
 
@@ -21,7 +21,12 @@ export const SocialNetworks = ({
   );
 
   return (
-    <div className={cn('flex gap-4', className)}>
+    <div
+      className={cn(
+        'flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 md:gap-4',
+        className,
+      )}
+    >
       <a
         href="https://twitter.com/planb_network"
         target="_blank"
@@ -36,7 +41,11 @@ export const SocialNetworks = ({
         rel="noreferrer"
         aria-label="Follow us on Nostr"
       >
-        <RiRocketLine size={iconSize} className={iconClasses} />
+        <Nostr
+          width={iconSize}
+          height={iconSize}
+          className={cn(iconClasses, 'fill-current')}
+        />
       </a>
       <a
         href="https://github.com/PlanB-Network/bitcoin-educational-content"
