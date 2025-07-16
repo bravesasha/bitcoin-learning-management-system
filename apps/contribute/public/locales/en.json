@@ -1763,7 +1763,6 @@
     "reviewTranscriptionGenerateAudio": "Review transcription & generate audio",
     "reviewTranscriptionInstructions": "Translate and type the transcription of the lecture in your language. Then, select Generate Audio to create an automatic audio version of your transcription. Once generated, listen to the audio to ensure accuracy and validate it using Validate Audio. If needed, you can regenerate the audio to make adjustments. You can do this up to 3 times.",
     "language": "Language",
-    "limitTries": "Limit 2/3 tries",
     "generateAudio": "Generate audio",
     "editTranscript": "Edit transcript",
     "enterTranslation": "Enter your translation here...",
@@ -1772,6 +1771,9 @@
     "reviewInstructions": "Review the transcription, make any necessary corrections and then generate the audio.\nIf the audio has an issue that is not related to the transcription, you can report the problem",
     "createVideo": "Create video",
     "nextSlide": "Next slide",
-    "completeAllValidations": "Please complete all validations before proceeding"
+    "completeAllValidations": "Please complete all validations before proceeding",
+    "slideNotFound": "⚠️ Slide not found",
+    "slideNotFoundDescription": "This slide file doesn't exist. Please contact support for assistance.",
+    "audioNotFoundDescription": "Audio file not found. Please contact support for assistance."
   }
 }

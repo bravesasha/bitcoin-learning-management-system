@@ -1,5 +1,5 @@
 {
-  "id": "f1dd6d6c-7616-47a7-9b2c-c9a12e4d0190",
+  "id": "ebd5426f-4740-4ec1-8317-4110b78a97ac",
   "prevId": "a083b907-b8fb-43a3-a796-d5dc18d36178",
   "version": "7",
   "dialect": "postgresql",
@@ -1798,6 +1798,13 @@
           "notNull": true,
           "default": false
         },
+        "audio_tries": {
+          "name": "audio_tries",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "ppt_resource_path": {
           "name": "ppt_resource_path",
           "type": "text",
@@ -1818,6 +1825,12 @@
         },
         "translated_content": {
           "name": "translated_content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_translated_content": {
+          "name": "ai_translated_content",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface OnlyOfficeSlideEditorProps {
   /** Absolute or relative URL of the PPTX file to edit */
@@ -63,11 +64,12 @@ const OnlyOfficeSlideEditorInner = forwardRef<
     // Track manual save status without triggering React re-renders (DOM reconciliation issues)
     const isSavingRef = useRef(false);
     const [loadingState, setLoadingState] = useState<
-      'loading' | 'ready' | 'error'
+      'loading' | 'ready' | 'error' | 'file-not-found'
     >('loading');
     const editorId = useRef(
       `onlyoffice-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     );
+    const { t } = useTranslation();
     const cleanupRef = useRef<(() => void) | null>(null);
 
     // Expose saveDocument method to parent component
@@ -187,7 +189,20 @@ const OnlyOfficeSlideEditorInner = forwardRef<
             ? 'host.docker.internal:3000'
             : 'api:3000';
 
-          // Request download token
+          // First check if file exists to avoid OnlyOffice errors
+          const fileCheckUrl = `/api/translation-downloads/pptx/${courseId}/${language}/${partId}/${chapterId}/${slideId}/${fileName}`;
+          const fileCheckResp = await fetch(fileCheckUrl, {
+            method: 'GET',
+            headers: { Range: 'bytes=0-0' },
+          });
+
+          if (!fileCheckResp.ok) {
+            console.warn(`PPTX file not found: ${fileCheckUrl}`);
+            setLoadingState('file-not-found');
+            return;
+          }
+
+          // Request download token only if file exists
           const tokenResp = await fetch(
             '/api/translation-downloads/pptx-token',
             {
@@ -394,6 +409,15 @@ const OnlyOfficeSlideEditorInner = forwardRef<
                         'Creating OnlyOffice editor with ID:',
                         editorId.current,
                       );
+
+                      // Additional safety check - ensure container is still in DOM
+                      if (!document.body.contains(containerRef.current)) {
+                        console.warn(
+                          'OnlyOffice container no longer in DOM, skipping initialization',
+                        );
+                        return;
+                      }
+
                       editorInstanceRef.current = new (
                         window as any
                       ).DocsAPI.DocEditor(editorId.current, config);
@@ -425,6 +449,15 @@ const OnlyOfficeSlideEditorInner = forwardRef<
                       'Creating OnlyOffice editor with ID:',
                       editorId.current,
                     );
+
+                    // Additional safety check - ensure container is still in DOM
+                    if (!document.body.contains(containerRef.current)) {
+                      console.warn(
+                        'OnlyOffice container no longer in DOM, skipping initialization',
+                      );
+                      return;
+                    }
+
                     editorInstanceRef.current = new (
                       window as any
                     ).DocsAPI.DocEditor(editorId.current, config);
@@ -510,6 +543,44 @@ const OnlyOfficeSlideEditorInner = forwardRef<
             }}
           >
             <div style={{ color: '#666' }}>Loading editor...</div>
+          </div>
+        )}
+        {loadingState === 'file-not-found' && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '600px',
+              backgroundColor: '#fffbeb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+            }}
+          >
+            <div
+              style={{
+                color: '#d97706',
+                marginBottom: '8px',
+                fontSize: '18px',
+              }}
+            >
+              {t('translate.slideNotFound', {
+                defaultValue: '⚠️ Slide not found',
+              })}
+            </div>
+            <div
+              style={{
+                color: '#92400e',
+                textAlign: 'center',
+                maxWidth: '400px',
+              }}
+            >
+              {t('translate.slideNotFoundDescription', {
+                defaultValue:
+                  "This slide file doesn't exist. Please contact support for assistance.",
+              })}
+            </div>
           </div>
         )}
         {loadingState === 'error' && (

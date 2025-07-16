@@ -1606,7 +1606,6 @@
     "reviewTranscriptionGenerateAudio": "Réviser la transcription & générer l'audio",
     "reviewTranscriptionInstructions": "Traduisez et saisissez la transcription du cours dans votre langue. Ensuite, cliquez sur \u00AB Générer l'audio \u00BB pour créer automatiquement une version audio de votre transcription. Une fois généré, écoutez l'audio pour en vérifier l'exactitude et validez-le avec \u00AB Valider l'audio \u00BB. Si nécessaire, vous pouvez régénérer l'audio pour effectuer des ajustements, jusqu'à 3 fois.",
     "language": "Langue",
-    "limitTries": "Limite 2/3 essais",
     "generateAudio": "Générer l'audio",
     "editTranscript": "Éditer la transcription",
     "enterTranslation": "Entrez votre traduction ici...",
@@ -1616,6 +1615,9 @@
     "createVideo": "Créer la vidéo",
     "nextSlide": "Diapositive suivante",
     "completeAllValidations": "Veuillez compléter toutes les validations avant de continuer",
-    "maxAudioTriesReached": "Vous avez atteint le nombre maximum de générations audio. Pour demander une tentative supplémentaire, veuillez contacter le coordinateur."
+    "maxAudioTriesReached": "Vous avez atteint le nombre maximum de générations audio. Pour demander une tentative supplémentaire, veuillez contacter le coordinateur.",
+    "slideNotFound": "⚠️ Diapositive non trouvée",
+    "slideNotFoundDescription": "Ce fichier de diapositive n'existe pas. Veuillez contacter le support pour obtenir de l'aide.",
+    "audioNotFoundDescription": "Fichier audio non trouvé. Veuillez contacter le support pour obtenir de l'aide."
   }
 }

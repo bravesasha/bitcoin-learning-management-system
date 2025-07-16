@@ -61,6 +61,7 @@ interface CourseTranslationSlide {
   pptValidated?: boolean;
   transcriptionValidated?: boolean;
   audioValidated?: boolean;
+  audioTries?: number;
   pptResourcePath: string | null;
   audioResourcePath: string | null;
   originalContent: string | null;
@@ -99,7 +100,10 @@ function ChapterTranslationPage() {
     const chapIdx = chapterData.context.chapterIndex;
     const slide = chapterData.slides?.[currentSlideIndex];
     if (!slide) return '';
-    const slideIdx = slide.slideNumber ?? currentSlideIndex; // slide index is already 0-based in storage
+    // Convert 1-based slideNumber from database to 0-based for filename
+    const slideIdx = slide.slideNumber
+      ? slide.slideNumber - 1
+      : currentSlideIndex;
     return `${partIdx}.${chapIdx}_${slideIdx}`;
   }, [chapterData, currentSlideIndex]);
 
@@ -131,7 +135,8 @@ function ChapterTranslationPage() {
     const saved = Number(
       sessionStorage.getItem(getAttemptKey(slide.slideId)) ?? '0',
     );
-    setAudioAttempts(Number.isFinite(saved) ? saved : 0);
+    const fromDb = slide.audioTries ?? 0;
+    setAudioAttempts(Math.max(saved, fromDb));
   }, [chapterData, currentSlideIndex]);
 
   // Video generation modal state
@@ -456,7 +461,10 @@ function ChapterTranslationPage() {
       const data = await response.json();
       console.log('Audio generation task started:', data);
 
-      // Mark audio as unvalidated in DB immediately
+      // Increment attempt count & persist
+      const newAttempts = audioAttempts + 1;
+
+      // Mark audio as unvalidated in DB immediately and store attempts
       try {
         await trpcClient.content.updateCourseTranslationSlide.mutate({
           courseId,
@@ -464,20 +472,20 @@ function ChapterTranslationPage() {
           chapterId,
           slideId: currentSlide.slideId,
           audioValidated: false,
+          audioTries: newAttempts,
         } as any);
       } catch (err) {
         console.warn('Failed to mark audio unvalidated', err);
       }
 
-      const toolkitTaskId = data.toolkitTask?.task_id;
-
-      // Increment attempt count & persist
-      const newAttempts = audioAttempts + 1;
+      // Update local attempts state and persist to session storage
       setAudioAttempts(newAttempts);
       sessionStorage.setItem(
         getAttemptKey(currentSlide.slideId),
         String(newAttempts),
       );
+
+      const toolkitTaskId = data.toolkitTask?.task_id;
 
       // Start polling Language-Toolkit status if task_id present
       if (toolkitTaskId) {

@@ -44,6 +44,7 @@ interface CourseTranslationSlide {
   pptValidated?: boolean;
   transcriptionValidated?: boolean;
   audioValidated?: boolean;
+  audioTries?: number;
   pptResourcePath: string | null;
   audioResourcePath: string | null;
   originalContent: string | null;
@@ -449,7 +450,10 @@ function CompareSlidePage() {
     if (!chapterData || !currentSlide) return '';
     const partIdx = chapterData.context.partIndex;
     const chapIdx = chapterData.context.chapterIndex;
-    const slideIdx = currentSlide.slideNumber ?? numericSlideIndex;
+    // Convert 1-based slideNumber from database to 0-based for filename
+    const slideIdx = currentSlide.slideNumber
+      ? currentSlide.slideNumber - 1
+      : numericSlideIndex;
     return `${partIdx}.${chapIdx}_${slideIdx}`;
   }, [chapterData, currentSlide, numericSlideIndex]);
 
