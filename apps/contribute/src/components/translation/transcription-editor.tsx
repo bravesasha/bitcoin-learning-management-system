@@ -11,7 +11,6 @@ interface TranscriptionEditorProps {
   onGenerateAudio: () => void;
   onValidateTranscription: () => void;
   transcriptionValidated: boolean;
-  /** Optional: display the tries remaining e.g. "Limit 2/3 tries" */
   triesLabel?: string;
   /** Disable Generate Audio button when tries exhausted */
   generateDisabled?: boolean;
@@ -29,7 +28,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   onGenerateAudio,
   onValidateTranscription,
   transcriptionValidated,
-  triesLabel = 'Limit 2/3 tries',
+  triesLabel = 'Limit 0/3 tries',
   generateDisabled = false,
 }) => {
   const { t } = useTranslation();
