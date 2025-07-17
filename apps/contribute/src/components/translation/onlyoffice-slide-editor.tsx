@@ -7,6 +7,11 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { loadDocsAPI } from '#src/utils/onlyoffice-loader.ts';
+// Kick-off script preload as soon as this module is evaluated (fire-and-forget)
+loadDocsAPI().catch(() => {
+  // Errors will also surface again when individual editors await the loader
+});
 
 interface OnlyOfficeSlideEditorProps {
   /** Absolute or relative URL of the PPTX file to edit */
@@ -189,39 +194,33 @@ const OnlyOfficeSlideEditorInner = forwardRef<
             ? 'host.docker.internal:3000'
             : 'api:3000';
 
-          // First check if file exists to avoid OnlyOffice errors
-          const fileCheckUrl = `/api/translation-downloads/pptx/${courseId}/${language}/${partId}/${chapterId}/${slideId}/${fileName}`;
-          const fileCheckResp = await fetch(fileCheckUrl, {
-            method: 'GET',
-            headers: { Range: 'bytes=0-0' },
+          // Kick off DocsAPI loading and token request concurrently
+          const tokenPromise = fetch('/api/translation-downloads/pptx-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              courseId,
+              partId,
+              chapterId,
+              slideId,
+              language,
+              fileName,
+            }),
           });
 
-          if (!fileCheckResp.ok) {
-            console.warn(`PPTX file not found: ${fileCheckUrl}`);
-            setLoadingState('file-not-found');
-            return;
-          }
-
-          // Request download token only if file exists
-          const tokenResp = await fetch(
-            '/api/translation-downloads/pptx-token',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                courseId,
-                partId,
-                chapterId,
-                slideId,
-                language,
-                fileName,
-              }),
-            },
-          );
+          const [, tokenResp] = await Promise.all([
+            loadDocsAPI(),
+            tokenPromise,
+          ]);
 
           if (!tokenResp.ok) {
-            console.error('Failed to obtain OnlyOffice download token');
-            setLoadingState('error');
+            if (tokenResp.status === 404) {
+              console.warn('PPTX file not found (token endpoint)');
+              setLoadingState('file-not-found');
+            } else {
+              console.error('Failed to obtain OnlyOffice download token');
+              setLoadingState('error');
+            }
             return;
           }
 
@@ -234,11 +233,23 @@ const OnlyOfficeSlideEditorInner = forwardRef<
               .replace('127.0.0.1:3000', apiHost);
           }
 
-          // Generate document key
-          const documentKey = btoa(absoluteFileUrl).replace(
-            /[^a-zA-Z0-9]/g,
-            '',
-          );
+          // Generate a stable *unique* document key. Must be 1-20 ASCII chars.
+          // We create a short deterministic hash of the raw identifier to
+          // guarantee uniqueness across languages/slides while respecting the
+          // 20-char limit imposed by Document Server.
+          const rawKey = `${courseId}-${partId}-${chapterId}-${slideId}-${language}`;
+
+          const hashFn = (str: string) => {
+            // 32-bit FNV-1a hash for good distribution and speed.
+            let hash = 2166136261;
+            for (let i = 0; i < str.length; i++) {
+              hash ^= str.charCodeAt(i);
+              hash = (hash * 16777619) >>> 0; // >>> 0 ensures unsigned 32-bit
+            }
+            return hash.toString(36); // base-36 yields compact alphanum string
+          };
+
+          const documentKey = hashFn(rawKey).substring(0, 20);
           documentKeyRef.current = documentKey;
 
           console.log('OnlyOffice initialization params:', {
@@ -391,85 +402,110 @@ const OnlyOfficeSlideEditorInner = forwardRef<
             token: '',
           };
 
-          // Load OnlyOffice API script if not already loaded
-          if (!(window as any).DocsAPI) {
-            const script = document.createElement('script');
-            script.src = 'http://localhost/web-apps/apps/api/documents/api.js';
-            script.onload = () => {
-              if (
-                isMounted &&
-                containerRef.current &&
-                (window as any).DocsAPI
-              ) {
-                // Small delay to ensure container is fully ready
-                setTimeout(() => {
-                  if (isMounted && containerRef.current) {
-                    try {
-                      console.log(
-                        'Creating OnlyOffice editor with ID:',
-                        editorId.current,
-                      );
+          // -------------------------------------------------
+          // 3️⃣   Re-use existing editor instance if possible
+          // -------------------------------------------------
+          if (editorInstanceRef.current) {
+            try {
+              const inst: any = editorInstanceRef.current;
 
-                      // Additional safety check - ensure container is still in DOM
-                      if (!document.body.contains(containerRef.current)) {
-                        console.warn(
-                          'OnlyOffice container no longer in DOM, skipping initialization',
-                        );
-                        return;
-                      }
+              let swapped = false;
 
-                      editorInstanceRef.current = new (
-                        window as any
-                      ).DocsAPI.DocEditor(editorId.current, config);
-                    } catch (error) {
-                      console.error('Error creating OnlyOffice editor:', error);
-                      if (isMounted) {
-                        setLoadingState('error');
-                      }
-                    }
-                  }
-                }, 100);
-              }
-            };
-            script.onerror = () => {
-              console.error('Failed to load OnlyOffice API script');
-              if (isMounted) {
-                setLoadingState('error');
-              }
-            };
-            document.head.appendChild(script);
-          } else {
-            // OnlyOffice API already loaded
-            if (isMounted && containerRef.current) {
-              // Small delay to ensure container is fully ready
-              setTimeout(() => {
-                if (isMounted && containerRef.current) {
-                  try {
-                    console.log(
-                      'Creating OnlyOffice editor with ID:',
-                      editorId.current,
-                    );
-
-                    // Additional safety check - ensure container is still in DOM
-                    if (!document.body.contains(containerRef.current)) {
-                      console.warn(
-                        'OnlyOffice container no longer in DOM, skipping initialization',
-                      );
-                      return;
-                    }
-
-                    editorInstanceRef.current = new (
-                      window as any
-                    ).DocsAPI.DocEditor(editorId.current, config);
-                  } catch (error) {
-                    console.error('Error creating OnlyOffice editor:', error);
-                    if (isMounted) {
-                      setLoadingState('error');
-                    }
-                  }
+              // Preferred API: replaceDocument (DS ≥8)
+              if (typeof inst.replaceDocument === 'function') {
+                try {
+                  inst.replaceDocument(config);
+                  swapped = true;
+                } catch (e) {
+                  console.warn(
+                    'replaceDocument failed, will try alternative path',
+                    e,
+                  );
                 }
-              }, 100);
+              }
+
+              // Older API: loadDocument (DS 6–7)
+              if (!swapped && typeof inst.loadDocument === 'function') {
+                try {
+                  inst.loadDocument(config.document, config.editorConfig);
+                  swapped = true;
+                } catch (e) {
+                  console.warn(
+                    'loadDocument failed, fallback to setDocumentConfig',
+                    e,
+                  );
+                }
+              }
+
+              // DS 9: setDocumentConfig per-field + refresh
+              if (!swapped && typeof inst.setDocumentConfig === 'function') {
+                try {
+                  inst.setDocumentConfig('key', documentKey);
+                  inst.setDocumentConfig('url', absoluteFileUrl);
+                  if (typeof inst.refresh === 'function') {
+                    inst.refresh();
+                  }
+                  swapped = true;
+                } catch (e) {
+                  console.warn('setDocumentConfig fallback failed', e);
+                }
+              }
+
+              if (!swapped) {
+                throw new Error('No supported hot-swap method succeeded');
+              }
+
+              // Update local state immediately
+              if (isMounted) setLoadingState('ready');
+              return; // Skip full re-initialisation
+            } catch (err) {
+              console.warn('Hot-swap failed, recreating editor', err);
+              // If hot-swap fails, destroy and recreate below
+              try {
+                editorInstanceRef.current.destroy?.();
+              } catch (_) {
+                /* ignore */
+              }
+              editorInstanceRef.current = null;
             }
+          }
+
+          // DocsAPI is guaranteed to be available at this point (loaded in parallel with token request)
+          if (isMounted && containerRef.current) {
+            // Small delay to ensure container is fully ready
+            setTimeout(() => {
+              if (!isMounted || !containerRef.current) return;
+
+              try {
+                // Prevent duplicate editors if the effect reruns quickly
+                if (editorInstanceRef.current) {
+                  editorInstanceRef.current.destroy?.();
+                  editorInstanceRef.current = null;
+                }
+
+                console.log(
+                  'Creating OnlyOffice editor with ID:',
+                  editorId.current,
+                );
+
+                // Additional safety check - ensure container is still in DOM
+                if (!document.body.contains(containerRef.current)) {
+                  console.warn(
+                    'OnlyOffice container no longer in DOM, skipping initialization',
+                  );
+                  return;
+                }
+
+                editorInstanceRef.current = new (
+                  window as any
+                ).DocsAPI.DocEditor(editorId.current, config);
+              } catch (error) {
+                console.error('Error creating OnlyOffice editor:', error);
+                if (isMounted) {
+                  setLoadingState('error');
+                }
+              }
+            }, 100);
           }
 
           // Store cleanup function
