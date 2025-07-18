@@ -834,6 +834,7 @@ function CompareSlidePage() {
                   slideId={currentSlide?.slideId}
                   fileName={fileBaseName}
                   language={originalLanguage}
+                  mode="view"
                 />
               </div>
             </div>

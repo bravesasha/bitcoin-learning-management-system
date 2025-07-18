@@ -32,6 +32,8 @@ interface OnlyOfficeSlideEditorProps {
   fileName?: string;
   /** Language for manual saving */
   language?: string;
+  /** Editor mode. Use "view" for read-only viewer. Defaults to "edit". */
+  mode?: 'view' | 'edit';
 }
 
 export interface OnlyOfficeSlideEditorRef {
@@ -60,6 +62,7 @@ const OnlyOfficeSlideEditorInner = forwardRef<
       slideId,
       language,
       fileName,
+      mode = 'edit',
     },
     ref,
   ) => {
@@ -269,7 +272,7 @@ const OnlyOfficeSlideEditorInner = forwardRef<
               permissions: {
                 comment: true,
                 download: true,
-                edit: true,
+                edit: mode !== 'view',
                 fillForms: true,
                 modifyFilter: true,
                 modifyContentControl: true,
@@ -289,7 +292,7 @@ const OnlyOfficeSlideEditorInner = forwardRef<
             },
             documentType: 'slide',
             editorConfig: {
-              mode: 'edit',
+              mode,
               lang: 'en',
               callbackUrl: `${window.location.protocol}//${apiHost}/api/translation-downloads/pptx-callback?courseId=${courseId}&partId=${partId}&chapterId=${chapterId}&slideId=${slideId}&language=${language}&fileName=${fileName}`,
               coEditing: {
@@ -305,7 +308,7 @@ const OnlyOfficeSlideEditorInner = forwardRef<
                 forcesave: false,
                 commentAuthorOnly: false,
                 comments: true,
-                compactToolbar: false,
+                compactToolbar: mode === 'view',
                 compatibleFeatures: false,
                 customer: {
                   address: '',
@@ -558,6 +561,7 @@ const OnlyOfficeSlideEditorInner = forwardRef<
       language,
       fileName,
       onDocumentModified,
+      mode,
     ]);
 
     if (!fileUrl) {
@@ -659,5 +663,6 @@ export const OnlyOfficeSlideEditor = memo(
     prev.slideId === next.slideId &&
     prev.chapterId === next.chapterId &&
     prev.partId === next.partId &&
-    prev.courseId === next.courseId,
+    prev.courseId === next.courseId &&
+    prev.mode === next.mode,
 );
