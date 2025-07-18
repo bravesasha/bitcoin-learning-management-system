@@ -961,7 +961,7 @@
     "pageTitle": "Le portail Podcast"
   },
   "professors": {
-    "pageSubtitle": "Tous nos professeurs sont bénévoles et des bitcoiners passionés. Vous pouvez leur envoyer un pourboire pour les remercier.",
+    "pageSubtitle": "Tous nos professeurs sont bénévoles et des bitcoiners passionnés. Vous pouvez leur envoyer un pourboire pour les remercier.",
     "pageTitle": "Professeurs",
     "tips": {
       "noTipsYet": "Ce professeur n'accepte pas les pourboires pour le moment.",
@@ -1135,7 +1135,7 @@
   },
   "underConstruction": {
     "github": "GitHub",
-    "p1": "Un lapin est tombé dans un trou. À cause de cette aventure inattendue, cette page est en cours de construction pour le moment. Nous nous excusons pour tout inconvénient. Notre équipe est à pied d'œuvre pour terminer cette page. Si vous êtes intéressé à donner un coup de main, n'hésitez pas à cliquer ici :",
+    "p1": "Un lapin est tombé dans un trou. À cause de cette aventure inattendue, cette page est en cours de construction pour le moment. Nous nous excusons pour tout inconvénient. Notre équipe est à pied d'œuvre pour terminer cette page. Si vous êtes intéressé à donner un coup de main, n'hésitez pas à cliquer ici :",
     "p2": "et pensez à rejoindre notre communauté !",
     "pageTitle": "Oups.",
     "itemNotFound": "{{item}} introuvable",
@@ -1519,7 +1519,7 @@
     "noCoursesAvailableForTranslation": "Aucun cours disponible pour la relecture dans cette langue pour le moment",
     "translateCourse": "Relire le cours",
     "translateCourses": "Relire les cours",
-    "translateContent": "Relire le contenu",
+    "translateContent": "Envoyer une demande de relecture",
     "coursesToTranslate": "Cours à relire",
     "yourContributions": "Vos contributions",
     "startTranslating": "Commencer à relire",
@@ -1541,7 +1541,7 @@
     "languageMissing": "Votre langue manque ? Faites-le nous savoir !",
     "helpExpandBitcoinEducation": "Si votre langue n'est pas répertoriée, n'hésitez pas à nous contacter ! Nous pouvons collaborer pour l'ajouter sur la plateforme.",
     "contactUs": "Contactez-nous",
-    "noteFewCourses": "Note : vous pouvez accéder à la version anglaise de certains cours en parallèle du contenu dans la langue d'origine pour une meilleure compréhension.",
+    "note": "Note : vous pouvez accéder à la version anglaise de certains cours en parallèle du contenu dans la langue d'origine pour une meilleure compréhension.\nSi vous ne trouvez aucun cours traduit dans votre langue, veuillez ",
     "status": {
       "published": "Publié",
       "validated": "Validé",
@@ -1577,7 +1577,7 @@
       "sendRequest": "Envoyer la demande",
       "cancel": "Annuler",
       "close": "Fermer",
-      "requestSentSuccess": "✓ Demande envoyée",
+      "requestSentSuccess": "Votre demande de relecture a été envoyé",
       "onceRequestApproved": "Une fois votre demande approuvée, vous pourrez commencer à relire ce cours. Vous serez notifié dès qu'elle sera acceptée."
     },
     "joinOurProofreaders": "Rejoignez notre équipe de relecture pour rendre l'éducation Bitcoin accessible dans le monde entier. Vous pouvez aider plus de personnes à s'engager avec l'écosystème et à trouver leur chemin vers la liberté !",
@@ -1618,6 +1618,11 @@
     "maxAudioTriesReached": "Vous avez atteint le nombre maximum de générations audio. Pour demander une tentative supplémentaire, veuillez contacter le coordinateur.",
     "slideNotFound": "⚠️ Diapositive non trouvée",
     "slideNotFoundDescription": "Ce fichier de diapositive n'existe pas. Veuillez contacter le support pour obtenir de l'aide.",
-    "audioNotFoundDescription": "Fichier audio non trouvé. Veuillez contacter le support pour obtenir de l'aide."
+    "audioNotFoundDescription": "Fichier audio introuvable. Veuillez contacter le support pour obtenir de l'aide.",
+    "seeMore": "Voir plus"
+  },
+  "footer": {
+    "helpCenter": "Centre d'aide",
+    "visitPlanB": "Visitez Plan ₿ Network"
   }
 }
