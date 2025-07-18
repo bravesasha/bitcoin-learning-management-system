@@ -147,7 +147,13 @@ function TranslateCoursesPage() {
       )
       .filter((course): course is BasicCourse => course !== undefined);
 
-    const displayed = contributionCourses.slice(0, visibleCount);
+    // Apply topic filter so the TopicFilter works in "Your contributions" view
+    const filteredContributions = filterCoursesByTopic(
+      contributionCourses,
+      selectedTopic,
+    );
+
+    const displayed = filteredContributions.slice(0, visibleCount);
 
     return (
       <>
@@ -158,7 +164,7 @@ function TranslateCoursesPage() {
           refetchUserContributions={refetchUserContributions}
           onRequestSuccess={handleRequestSuccess}
         />
-        {visibleCount < contributionCourses.length && (
+        {visibleCount < filteredContributions.length && (
           <div className="flex justify-center mt-8">
             <Button
               variant="outline"

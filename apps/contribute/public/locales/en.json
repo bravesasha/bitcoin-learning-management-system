@@ -1745,7 +1745,7 @@
     "proofread": "Proofread",
     "videoGeneration": {
       "completed": "Great job! Thank you for proofreading this course!",
-      "title": "Video generation",
+      "title": "Video creation progress",
       "progress": "progress",
       "completedMessage": "No need to wait! Feel free to review the next course now.",
       "backToCourse": "Back to course",
