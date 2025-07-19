@@ -1349,7 +1349,8 @@
     "mode": "Mode",
     "completed": "Terminé",
     "inProgress": "En cours",
-    "notStarted": "Non commencé"
+    "notStarted": "Non commencé",
+    "generalInformation": "Informations générales"
   },
   "conferences": {
     "addConferences": "N'hésitez pas à ajouter toute conférence manquante via ce dépôt <0>Github</0>.",

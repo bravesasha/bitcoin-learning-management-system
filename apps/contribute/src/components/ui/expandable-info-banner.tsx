@@ -56,7 +56,7 @@ export const ExpandableInfoBanner = ({
 
       {/* Content */}
       {open && (
-        <div className="px-4 pb-4 text-gray-700 text-sm whitespace-pre-line">
+        <div className="px-4 pb-4 text-gray-700 text-sm whitespace-normal">
           {children}
         </div>
       )}
