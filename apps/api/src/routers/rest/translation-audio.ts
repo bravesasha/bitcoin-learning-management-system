@@ -78,6 +78,7 @@ export const createRestTranslationAudioRoutes = async (
           language,
           text,
           voiceId,
+          professor,
         } = req.body as Record<string, string | undefined>;
 
         if (
@@ -95,18 +96,43 @@ export const createRestTranslationAudioRoutes = async (
         // Expected S3 key for the generated MP3
         const outputKey = `contribute/${courseId}/${language}/${partId}/${chapterId}/${slideId}/audio/${fileName}.mp3`;
 
-        // Query professor information for voice matching
-        const professors = await getCourseProfessors(
-          dependencies.postgres,
-          courseId,
-        );
-        console.log(
-          `Found ${professors.length} professors for course ${courseId}:`,
-          professors.map(
-            (p) =>
-              `${p.name} (${p.isCoordinator ? 'coordinator' : 'associated'})`,
-          ),
-        );
+        // Determine professor information for voice matching
+        let professors: Array<{
+          id: string;
+          name: string;
+          isCoordinator: boolean;
+        }> = [];
+
+        if (professor) {
+          // Use the professor name provided by the client (slide-level)
+          professors = [
+            {
+              id: 'slide',
+              name: professor,
+              isCoordinator: true,
+            },
+          ];
+          console.log(`Using professor from slide payload: ${professor}`);
+        } else {
+          // Fallback to course-level professors
+          const courseProfs = await getCourseProfessors(
+            dependencies.postgres,
+            courseId,
+          );
+          professors = courseProfs.map((p) => ({
+            id: p.id,
+            name: p.name,
+            isCoordinator: p.isCoordinator,
+          }));
+
+          console.log(
+            `Found ${professors.length} professors for course ${courseId}:`,
+            professors.map(
+              (p) =>
+                `${p.name} (${p.isCoordinator ? 'coordinator' : 'associated'})`,
+            ),
+          );
+        }
 
         // Base URL of the Language-Toolkit API (default to local dev instance)
         const toolkitUrl = process.env.LTK_URL ?? 'http://localhost:8000';

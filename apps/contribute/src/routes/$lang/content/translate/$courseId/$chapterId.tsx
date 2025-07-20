@@ -66,6 +66,7 @@ interface CourseTranslationSlide {
   audioResourcePath: string | null;
   originalContent: string | null;
   translatedContent: string | null;
+  professor: string | null;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -612,6 +613,7 @@ function ChapterTranslationPage() {
           fileName: fileBaseName,
           language: targetLanguage,
           text: currentSlide.translatedContent || '',
+          professor: currentSlide.professor || undefined,
         }),
       });
 
