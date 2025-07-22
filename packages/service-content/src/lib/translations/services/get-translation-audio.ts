@@ -1,5 +1,6 @@
 import { sql } from '@blms/database';
 import type { Dependencies } from '../../dependencies.js';
+import { getCourseProfessorsQuery } from '../queries/get-course-professors.js';
 
 export interface CourseProfessor {
   id: string;
@@ -8,22 +9,14 @@ export interface CourseProfessor {
 }
 
 /**
- * Service to get professor information for a course to enable voice matching
+ * Service to get professor information for a course (voice matching)
  */
 export const createGetCourseProfessors = ({ postgres }: Dependencies) => {
   return async (courseId: string): Promise<CourseProfessor[]> => {
     try {
-      const professors = await postgres.exec(sql`
-        SELECT
-          cp.professor_id as id,
-          p.name,
-          cp.is_coordinator as "isCoordinator"
-        FROM content.course_professors cp
-        JOIN content.professors p ON cp.professor_id = p.id
-        WHERE cp.course_id = ${courseId}
-        ORDER BY cp.is_coordinator DESC, p.name ASC
-      `);
-
+      const professors = await postgres.exec(
+        getCourseProfessorsQuery(courseId),
+      );
       return professors as CourseProfessor[];
     } catch (error) {
       console.warn(`Failed to fetch professors for course ${courseId}:`, error);
