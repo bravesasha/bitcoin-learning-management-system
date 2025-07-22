@@ -61,9 +61,12 @@ export const createContext = (
  */
 const t = initTRPC.context<Context>().create({
   errorFormatter({ ctx, shape, error }) {
-    ctx?.log(
-      `ERROR (${shape.data.path}): ${error.message} ${error.name} ${error.code} `,
-    );
+    if (!shape.data.path?.includes('getUserNotifications')) {
+      ctx?.log(
+        `ERROR (${shape.data.path}): ${error.message} ${error.name} ${error.code} `,
+      );
+    }
+
     return {
       ...shape,
       data: {
