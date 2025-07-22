@@ -2,6 +2,8 @@ export * from './get-translations.js';
 export * from './update-translations.js';
 export * from './content-management.js';
 export * from './get-courses-with-todo-translations.js';
+export * from './audio-services.js';
+export * from './download-services.js';
 export {
   createGetCourseTranslationSlides,
   createUpdateCourseTranslationSlide,
