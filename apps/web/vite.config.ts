@@ -11,7 +11,7 @@ const UI_PACKAGE_ASSETS = '../../packages/ui/src/assets';
 
 export default defineConfig({
   assetsInclude: [UI_PACKAGE_ASSETS],
-  base: '/',
+  base: './',
   build: {
     chunkSizeWarningLimit: 600,
     cssCodeSplit: true,
@@ -45,7 +45,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8181,
     proxy: {
-      '/api': `http://${process.env.DOCKER ? 'api' : 'localhost'}:3000`,
+      '/api': process.env.ELECTRON
+        ? 'http://api.planb.network'
+        : `http://${process.env.DOCKER ? 'api' : 'localhost'}:3000`,
       '/cdn': {
         rewrite: (path) => path.replace(/^\/cdn/, ''),
         target: `http://${process.env.DOCKER ? 'cdn:80' : 'localhost:8080'}`,
