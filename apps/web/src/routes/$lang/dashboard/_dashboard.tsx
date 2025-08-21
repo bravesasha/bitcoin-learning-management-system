@@ -33,7 +33,7 @@ function Dashboard() {
   }
 
   return isMobile ? (
-    <MainLayout variant="light" showFooter={false} headerVariant="light">
+    <MainLayout>
       <div>
         <div className={cn('bg-white text-black', padding)}>
           <Outlet />
@@ -41,7 +41,7 @@ function Dashboard() {
       </div>
     </MainLayout>
   ) : (
-    <MainLayout variant="gray" headerVariant="light">
+    <MainLayout>
       <div className="flex flex-row text-white mt-3 mx-4">
         <MenuDashboard location={location} />
         <div className="bg-white rounded-xl lg:ml-4 p-8 text-black lg:min-h-full w-full">

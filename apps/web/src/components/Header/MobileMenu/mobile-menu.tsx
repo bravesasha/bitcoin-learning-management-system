@@ -115,7 +115,7 @@ export const MobileMenu = ({
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <NotificationsPanel variant={variant} />
+              <NotificationsPanel />
               <div className="text-sm font-semibold shrink-0 min-w-8">
                 <button
                   type="button"
@@ -188,7 +188,7 @@ export const MobileMenu = ({
             <MobileMenuSection section={section} key={section.id} />
           ))}
         </ul>
-        <LanguageSelectorMobile mode={variant} />
+        <LanguageSelectorMobile />
       </nav>
 
       {isLoggedIn && (

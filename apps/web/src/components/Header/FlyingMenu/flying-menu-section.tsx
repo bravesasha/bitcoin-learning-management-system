@@ -13,33 +13,20 @@ import { FlyingMenuSubSection } from './flying-menu-sub-section.tsx';
 
 export interface FlyingMenuProps {
   section: NavigationSection;
-  variant?: 'dark' | 'light';
 }
 
 interface SectionTitleProps {
   section: NavigationSection;
-  variant?: 'dark' | 'light';
   addArrow?: boolean;
   isOpen?: boolean;
 }
 
-const SectionTitle = ({
-  section,
-  variant = 'dark',
-  addArrow,
-  isOpen,
-}: SectionTitleProps) => {
-  const variantMap = {
-    dark: 'text-white',
-    light: 'text-black',
-  };
-
+const SectionTitle = ({ section, addArrow, isOpen }: SectionTitleProps) => {
   if ('path' in section) {
     return (
       <Link
         className={cn(
-          'text-base font-medium leading-[144%] flex items-center gap-1.5',
-          variantMap[variant],
+          'text-base font-medium leading-[144%] flex items-center gap-1.5 text-black',
         )}
         to={section.path as '/'}
       >
@@ -72,7 +59,7 @@ const SectionTitle = ({
   }
 };
 
-export const FlyingMenuSection = ({ section, variant }: FlyingMenuProps) => {
+export const FlyingMenuSection = ({ section }: FlyingMenuProps) => {
   const { i18n, t } = useTranslation();
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -110,7 +97,7 @@ export const FlyingMenuSection = ({ section, variant }: FlyingMenuProps) => {
           open && 'bg-white/20',
         )}
       >
-        <SectionTitle section={section} variant={variant} />
+        <SectionTitle section={section} />
       </div>
     );
   }
@@ -128,12 +115,7 @@ export const FlyingMenuSection = ({ section, variant }: FlyingMenuProps) => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <SectionTitle
-            section={section}
-            variant={variant}
-            addArrow
-            isOpen={open}
-          />
+          <SectionTitle section={section} addArrow isOpen={open} />
         </div>
       </PopoverTrigger>
       <PopoverContent
@@ -146,8 +128,7 @@ export const FlyingMenuSection = ({ section, variant }: FlyingMenuProps) => {
       >
         <div
           className={cn(
-            'flex-auto overflow-hidden rounded-[20px]',
-            variant === 'light' ? 'bg-darkOrange-2' : 'bg-newBlack-3',
+            'flex-auto overflow-hidden rounded-[20px] bg-darkOrange-2',
           )}
         >
           <div className="flex flex-row gap-4 my-5 mx-4">
@@ -191,15 +172,11 @@ export const FlyingMenuSection = ({ section, variant }: FlyingMenuProps) => {
                   <FlyingMenuSubSection
                     key={subSectionOrElement.id}
                     subSection={subSectionOrElement}
-                    variant={variant}
                     hasMultipleSubSection={hasMultipleSubSection}
                   />
                 ) : (
                   <div className="mx-2 my-4" key={subSectionOrElement.id}>
-                    <MenuElement
-                      element={subSectionOrElement}
-                      variant={variant}
-                    />
+                    <MenuElement element={subSectionOrElement} />
                   </div>
                 );
               })}

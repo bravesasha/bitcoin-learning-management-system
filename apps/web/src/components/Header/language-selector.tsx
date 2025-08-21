@@ -15,25 +15,11 @@ import { LANGUAGES } from '../../utils/i18n.ts';
 
 interface LanguageSelectorProps {
   direction?: 'up' | 'down';
-  variant?: 'light' | 'dark' | 'darkOrange';
   className?: string;
 }
 
-const variantHeaderBackgroundMapClass = {
-  dark: 'text-white',
-  darkOrange: 'text-white bg-darkOrange-11',
-  light: 'text-black',
-};
-
-const variantSelectorMapClass = {
-  dark: 'text-white lg:bg-newBlack-3',
-  darkOrange: 'text-[#909093] lg:bg-[#25262d]',
-  light: 'text-darkOrange-10 lg:bg-darkOrange-2',
-};
-
 export const LanguageSelector = ({
   direction = 'down',
-  variant = 'dark',
   className,
 }: LanguageSelectorProps) => {
   const { t, i18n } = useTranslation();
@@ -74,8 +60,7 @@ export const LanguageSelector = ({
         <button
           type="button"
           className={cn(
-            'group z-50 flex place-items-center text-sm font-semibold gap-2.5 outline-hidden pl-2.5 py-2 rounded-2xl transition-all',
-            variantHeaderBackgroundMapClass[variant],
+            'group z-50 flex place-items-center text-sm font-semibold gap-2.5 outline-hidden pl-2.5 py-2 rounded-2xl transition-all text-black',
             className,
           )}
         >
@@ -88,11 +73,10 @@ export const LanguageSelector = ({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'flex flex-col items-center justify-center absolute z-50 bg-darkOrange-11 rounded-2xl w-[816px] px-8 py-6 max-h-fit overflow-y-scroll no-scrollbar',
+          'flex flex-col items-center justify-center absolute z-50 bg-darkOrange-11 rounded-2xl w-[816px] px-8 py-6 max-h-fit overflow-y-scroll no-scrollbar text-darkOrange-10 lg:bg-darkOrange-2',
           direction === 'down'
             ? 'top-7 -right-12'
             : 'bottom-16 left-1/2 -translate-x-1/2',
-          variantSelectorMapClass[variant],
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -127,11 +111,7 @@ export const LanguageSelector = ({
           rel="noopener noreferrer"
           className="mt-6 w-full"
         >
-          <Button
-            variant={variant === 'light' ? 'secondary' : 'outlineWhite'}
-            size="m"
-            className={cn('w-full', variant === 'light' ? '!text-primary' : '')}
-          >
+          <Button variant="secondary" size="m" className="w-full !text-primary">
             {t('home.languageSection.link')}
             <FaArrowRightLong
               className={cn(
@@ -146,11 +126,7 @@ export const LanguageSelector = ({
   );
 };
 
-export const LanguageSelectorMobile = ({
-  mode = 'dark',
-}: {
-  mode?: 'light' | 'dark';
-}) => {
+export const LanguageSelectorMobile = () => {
   const { t, i18n } = useTranslation();
   const { setCurrentLanguage } = useContext(LangContext);
 
@@ -189,7 +165,7 @@ export const LanguageSelectorMobile = ({
         <button
           type="button"
           className={cn(
-            'group flex justify-between items-center gap-4 px-3 py-2.5 outline-hidden rounded-lg mt-auto mx-auto w-[280px] bg-[#f39561] dark:bg-[#5f5f5f] text-darkOrange-11 dark:text-white',
+            'group flex justify-between items-center gap-4 px-3 py-2.5 outline-hidden rounded-lg mt-auto mx-auto w-[280px] bg-[#f39561] text-darkOrange-11 ',
             open && 'rounded-t-none pt-4',
           )}
         >
@@ -207,8 +183,7 @@ export const LanguageSelectorMobile = ({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'flex flex-col absolute z-50 bg-[#f39561] dark:bg-[#5f5f5f] rounded-none !rounded-t-lg w-[280px] overflow-scroll no-scrollbar !shadow-none bottom-13 left-1/2 -translate-x-1/2 gap-5 px-3 pt-4 max-h-[calc(100dvh-84px)]',
-          mode === 'dark' && 'dark',
+          'flex flex-col absolute z-50 bg-[#f39561] rounded-none !rounded-t-lg w-[280px] overflow-scroll no-scrollbar !shadow-none bottom-13 left-1/2 -translate-x-1/2 gap-5 px-3 pt-4 max-h-[calc(100dvh-84px)]',
         )}
         addAnimation={false}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -226,7 +201,7 @@ export const LanguageSelectorMobile = ({
           >
             <span
               className={cn(
-                'flex capitalize label-medium-med-16px text-darkOrange-11 dark:text-white w-fit',
+                'flex capitalize label-medium-med-16px text-darkOrange-11 w-fit',
                 activeLanguage.toLowerCase() === language.toLowerCase() &&
                   'border rounded-lg border-darkOrange-5 gap-2 justify-between px-2.5 py-2',
               )}

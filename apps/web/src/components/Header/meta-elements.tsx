@@ -3,7 +3,6 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoLogOutOutline } from 'react-icons/io5';
-import SearchIcon from '#src/assets/icons/search.svg';
 import SearchIconBlack from '#src/assets/icons/search-black.svg';
 import { useGreater } from '#src/hooks/use-greater.js';
 import { useSmaller } from '#src/hooks/use-smaller.js';
@@ -17,15 +16,9 @@ import { NotificationsPanel } from './notifications-panel.tsx';
 export interface MetaElementsProps {
   onClickLogin: () => void;
   onClickRegister: () => void;
-  variant?: 'light' | 'dark';
-  notificationPanelVariant?: 'light' | 'dark';
 }
 
-export const MetaElements = ({
-  onClickLogin,
-  variant = 'dark',
-  notificationPanelVariant = 'dark',
-}: MetaElementsProps) => {
+export const MetaElements = ({ onClickLogin }: MetaElementsProps) => {
   const { t, i18n } = useTranslation();
   const { user, session } = useContext(AppContext);
   const location = useLocation();
@@ -44,20 +37,14 @@ export const MetaElements = ({
       <Link className="cursor-pointer" to={`/${i18n.language}/search`}>
         <img
           className="size-6"
-          src={variant === 'light' ? SearchIconBlack : SearchIcon}
+          src={SearchIconBlack}
           alt={t('search.search')}
         />
       </Link>
-      <LanguageSelector
-        direction={isScreenLg ? 'down' : 'up'}
-        variant={variant}
-      />
+      <LanguageSelector direction={isScreenLg ? 'down' : 'up'} />
       {isLoggedIn && !isMobile && (
         <>
-          <NotificationsPanel
-            variant={notificationPanelVariant}
-            headerVariant={variant}
-          />
+          <NotificationsPanel />
           <Link className="flex" to="/dashboard/courses">
             {isOnDashboard ? (
               <button
@@ -65,11 +52,7 @@ export const MetaElements = ({
                 onClick={async () => {
                   await logout();
                 }}
-                className={`cursor-pointer rounded-[16px] py-3 px-4 ${
-                  variant === 'light'
-                    ? 'bg-darkOrange-2 text-black hover:bg-darkOrange-1 active:bg-darkOrange-1 active:text-darkOrange-5'
-                    : 'bg-newBlack-3 text-white hover:bg-darkHover'
-                }`}
+                className={`cursor-pointer rounded-[16px] py-3 px-4 ${'bg-darkOrange-2 text-black hover:bg-darkOrange-1 active:bg-darkOrange-1 active:text-darkOrange-5'}`}
               >
                 <IoLogOutOutline size={24} />
               </button>
@@ -88,12 +71,7 @@ export const MetaElements = ({
 
       {!isLoggedIn && (
         <div className="flex flex-row gap-2 lg:gap-4">
-          <Button
-            size={'loginButton'}
-            variant={'loginButton'}
-            className="cursor-pointer text-white"
-            onClick={onClickLogin}
-          >
+          <Button size={'m'} variant={'primary'} rounded onClick={onClickLogin}>
             {t('menu.login')}
           </Button>
         </div>

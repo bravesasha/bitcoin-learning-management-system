@@ -4,13 +4,11 @@ import type { NavigationSubSection } from '../props.ts';
 
 export interface FlyingMenuSubSectionProps {
   subSection: NavigationSubSection;
-  variant?: 'dark' | 'light';
   hasMultipleSubSection?: boolean;
 }
 
 export const FlyingMenuSubSection = ({
   subSection,
-  variant = 'dark',
   hasMultipleSubSection,
 }: FlyingMenuSubSectionProps) => {
   return (
@@ -18,9 +16,8 @@ export const FlyingMenuSubSection = ({
       {subSection.title && (
         <h3
           className={compose(
-            'text-lg font-primary font-semibold',
+            'text-lg font-primary font-semibold text-black',
             'items' in subSection ? 'mb-4 px-2' : '',
-            variant === 'light' ? 'text-black' : 'text-white',
           )}
         >
           {subSection.title}
@@ -31,7 +28,6 @@ export const FlyingMenuSubSection = ({
           <MenuElement
             key={item.id}
             element={item}
-            variant={variant}
             isMultipleSubSectionChildren={hasMultipleSubSection}
           />
         ))}
